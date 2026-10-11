@@ -11,7 +11,7 @@ import { date, dateTime, kg, label, money, routeLabel } from '../../utils/format
 
 const FACTORS = [
   ['Produce / demand match', 30, 'Exact produce = 100, close name (e.g. Baby Kale ≈ Kale) = 75, otherwise excluded'],
-  ['Required date', 20, '0–2 days after harvest = 100, 3–4 = 75, 5–7 = 45; before harvest or beyond 7-day freshness = excluded'],
+  ['Required date', 20, '0–2 days after harvest = 100, 3–4 = 75, later = 45. Past demand, dates before harvest, or beyond the crop shelf life / freshness policy are excluded.'],
   ['Price compatibility', 20, 'Buyer max ≥ preferred = 100; between minimum and preferred scales 50–100; below minimum = excluded'],
   ['Quantity fit', 10, 'Request fits remaining supply = 100; partial supply scales down'],
   ['Buyer reliability', 10, 'Completed ÷ (completed + buyer cancellations); neutral 60 with fewer than 2 past orders'],

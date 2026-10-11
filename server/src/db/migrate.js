@@ -2,10 +2,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { pool } from '../config/db.js';
+import { assertNonProductionReset } from './safety.js';
 
 const MIGRATIONS_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), 'migrations');
 
 export async function resetDatabase() {
+  assertNonProductionReset();
   await pool.query('DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public;');
 }
 

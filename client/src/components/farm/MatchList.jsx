@@ -7,6 +7,7 @@ import { Icons } from '../Icons.jsx';
 import { kg, label, money, date, routeLabel, FULFILMENT_TERMS } from '../../utils/format.js';
 import { MarginChip } from './MarginGuardCard.jsx';
 import AiPanel from '../AiPanel.jsx';
+import ApprovalReview from './ApprovalReview.jsx';
 
 const FACTOR_LABELS = { produce: 'Produce', date: 'Date', price: 'Price', quantity: 'Quantity', reliability: 'Reliability', location: 'Location' };
 const URGENCY_TONE = { LOW: 'ok', MEDIUM: 'warn', HIGH: 'bad', CRITICAL: 'bad' };
@@ -17,6 +18,7 @@ function MatchCard({ match, unit, canDecide, selected, onSelect, onDecided }) {
   const [busy, setBusy] = useState(false);
   const [ai, setAi] = useState(null);
   const [aiBusy, setAiBusy] = useState(false);
+  const [review, setReview] = useState(null);
   const pending = match.status === 'SUGGESTED';
 
   const explain = async () => {
@@ -30,13 +32,29 @@ function MatchCard({ match, unit, canDecide, selected, onSelect, onDecided }) {
     }
   };
 
-  const approve = async () => {
+  const preview = async () => {
     setBusy(true);
     try {
-      const res = await api.post(`/matches/${match.id}/approve`, { quantity: Number(qty) });
+      setReview(await api.post(`/matches/${match.id}/preview`, { quantity: Number(qty) }));
+    } catch (err) {
+      toast(err.message, 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
+  const approve = async (marginOverrideReason) => {
+    setBusy(true);
+    try {
+      const res = await api.post(`/matches/${match.id}/approve`, {
+        quantity: review.quantity, quoteToken: review.quoteToken,
+        ...(review.requiresMarginOverride ? { marginOverrideReason } : {}),
+      });
+      setReview(null);
       toast(`Approved ${kg(qty, unit)} for ${match.buyerName} — order #${res.orderId} created`);
       onDecided(res);
     } catch (err) {
+      if (['APPROVAL_QUOTE_CHANGED', 'MARGIN_REVIEW_REQUIRED'].includes(err.code)) setReview(err.details);
+      else setReview(null);
       toast(err.message, 'error');
     } finally {
       setBusy(false);
@@ -73,7 +91,7 @@ function MatchCard({ match, unit, canDecide, selected, onSelect, onDecided }) {
               {!pending && <StatusBadge status={match.status} />}
             </div>
             <div className="small muted mt-8">
-              Requested {kg(match.demandQuantity, unit)} for {date(match.requiredDate, { weekday: true })}
+              Requested {kg(match.demandQuantity, unit)} for {date(match.effectiveRequiredDate || match.requiredDate, { weekday: true })}
               {match.recurrence !== 'NONE' && ` · ${label(match.recurrence)}`} · {label(match.preferredCollectionMethod)}
             </div>
           </div>
@@ -93,6 +111,7 @@ function MatchCard({ match, unit, canDecide, selected, onSelect, onDecided }) {
       </ul>
 
       {/* Decision support (does not change the score): fulfilment terms, Margin Guard before/after fulfilment, urgency. */}
+      {pending && Number(qty) !== Number(match.recommendedQuantity) && <p className="small muted">The estimates below use the recommended quantity. Review your allocation to recalculate costs and margin for {kg(qty, unit)}.</p>}
       <div className="chip-row">
         {match.fulfilment && (
           <span className="mini-chip" title="Estimated fulfilment cost for this order (farm-private)">
@@ -102,7 +121,7 @@ function MatchCard({ match, unit, canDecide, selected, onSelect, onDecided }) {
         <MarginChip margin={match.margin} />
         {match.netMargin && match.fulfilment?.total > 0 && <MarginChip margin={match.netMargin} prefix="Net" />}
         {match.urgency && <span className={`mini-chip ${URGENCY_TONE[match.urgency]}`}>Urgency: {label(match.urgency)}</span>}
-        {match.scoreBreakdown?.reliability && <span className="mini-chip">Purchase likelihood {match.scoreBreakdown.reliability.score}%</span>}
+        {match.scoreBreakdown?.reliability && <span className="mini-chip" title="Rule-based order-history score; neutral when history is limited">Reliability score {match.scoreBreakdown.reliability.score}/100</span>}
         <button className="btn btn-ghost btn-sm" onClick={explain} disabled={aiBusy}><Icons.Sparkle />{aiBusy ? 'Explaining…' : 'Explain with AI'}</button>
       </div>
       {ai && <div className="mt-8"><AiPanel result={ai} title="Why this match?" onClose={() => setAi(null)} /></div>}
@@ -125,7 +144,7 @@ function MatchCard({ match, unit, canDecide, selected, onSelect, onDecided }) {
           <span className="small muted">{unit}</span>
           <div className="topbar-spacer" />
           <button className="btn btn-sm btn-danger" onClick={reject} disabled={busy}><Icons.X />Reject</button>
-          <button className="btn btn-sm btn-primary" onClick={approve} disabled={busy || !(Number(qty) > 0)}><Icons.Check />Approve</button>
+          <button className="btn btn-sm btn-primary" onClick={preview} disabled={busy || !(Number(qty) > 0)}><Icons.Check />Review & approve</button>
         </div>
       )}
       {match.status !== 'SUGGESTED' && match.decidedByName && (
@@ -135,6 +154,7 @@ function MatchCard({ match, unit, canDecide, selected, onSelect, onDecided }) {
           {match.decisionNote && ` · “${match.decisionNote}”`}
         </div>
       )}
+      {review && <ApprovalReview key={review.quoteToken} review={review} busy={busy} onClose={() => setReview(null)} onApprove={approve} />}
     </div>
   );
 }
@@ -156,7 +176,7 @@ export default function MatchList({ matches, excluded = [], unit = 'kg', canDeci
         await api.post(`/matches/${m.id}/approve`, {});
         ok += 1;
       } catch (err) {
-        toast(`${m.buyerName}: ${err.message}`, 'error');
+        toast(`${m.buyerName}: ${err.code === 'MARGIN_REVIEW_REQUIRED' ? 'Use Review & approve to review the lower margin and record your reason.' : err.message}`, 'error');
       }
     }
     if (ok) toast(`Approved ${ok} match${ok > 1 ? 'es' : ''}`);

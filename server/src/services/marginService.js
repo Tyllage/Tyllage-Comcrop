@@ -17,17 +17,19 @@ export function minViablePrice(cost, minMarginPct) {
  * Margin on a sale. `fulfilment` is the estimated fulfilment cost per unit (0 = margin before logistics);
  * margin % is always relative to the selling price.
  */
-export function marginGuard({ unitPrice, cost, minMarginPct, quantity = 0, fulfilment = 0 }) {
+export function marginGuard({ unitPrice, cost, minMarginPct, quantity = 0, fulfilment = 0, fulfilmentTotal }) {
   if (cost === null || cost === undefined) {
     return { known: false, status: 'UNKNOWN', message: 'Production cost not recorded — margin unknown' };
   }
   const price = Number(unitPrice);
-  const logistics = Number(fulfilment) || 0;
-  const perUnit = round2(price - Number(cost) - logistics);
-  const pct = price > 0 ? round1((perUnit / price) * 100) : null;
+  const logistics = quantity > 0 && fulfilmentTotal !== undefined ? Number(fulfilmentTotal) / quantity : Number(fulfilment) || 0;
+  const rawMargin = price - Number(cost) - logistics;
+  const perUnit = round2(rawMargin);
+  const rawPct = price > 0 ? (rawMargin / price) * 100 : null;
+  const pct = rawPct === null ? null : round1(rawPct);
   let status = 'OK';
-  if (perUnit < 0) status = 'LOSS';
-  else if (pct < Number(minMarginPct)) status = 'BELOW_MINIMUM';
+  if (rawMargin < 0) status = 'LOSS';
+  else if (rawPct < Number(minMarginPct)) status = 'BELOW_MINIMUM';
   const after = logistics > 0 ? ` after $${logistics.toFixed(2)}/unit fulfilment` : '';
   const message = {
     OK: `${pct}% margin ($${perUnit.toFixed(2)}/unit)${after} meets the farm minimum of ${minMarginPct}%`,
@@ -35,7 +37,7 @@ export function marginGuard({ unitPrice, cost, minMarginPct, quantity = 0, fulfi
     LOSS: `Margin Guard: sells $${Math.abs(perUnit).toFixed(2)}/unit below production cost${after}`,
   }[status];
   return {
-    known: true, status, perUnit, pct, total: round2(perUnit * quantity), minMarginPct: Number(minMarginPct),
+    known: true, status, perUnit, pct, total: round2(rawMargin * quantity), minMarginPct: Number(minMarginPct),
     fulfilmentPerUnit: round2(logistics), message,
   };
 }

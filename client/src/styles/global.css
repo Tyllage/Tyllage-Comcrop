@@ -466,3 +466,12 @@ textarea.input { min-height: 90px; resize: vertical; line-height: 1.5; }
 @media (max-width: 600px) {
   .ladder { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+.approval-estimate { margin: 0; }
+.approval-estimate > div { display: flex; justify-content: space-between; gap: 20px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.approval-estimate dt { color: var(--muted); }
+.approval-estimate dd { margin: 0; text-align: right; font-weight: 600; }
+.approval-total { font-weight: 700; }
+.approval-warning { display: grid; gap: 12px; }
+.approval-warning p { margin: 0; }
+.approval-acknowledgement { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; }
+.approval-acknowledgement input { margin-top: 3px; flex-shrink: 0; }

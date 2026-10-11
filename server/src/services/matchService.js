@@ -1,18 +1,24 @@
 import { z } from 'zod';
+import { createHash } from 'node:crypto';
 import { withTransaction, query } from '../config/db.js';
 import { validate } from '../utils/validate.js';
 import { camelize, camelizeAll } from '../utils/case.js';
-import { notFound, conflict } from '../utils/errors.js';
+import { notFound, conflict, AppError } from '../utils/errors.js';
 import { assertFarmAdmin } from './farmAccessService.js';
 import { createAllocatedOrder } from './allocationService.js';
-import { MATCH_SELECT } from './harvestMatchService.js';
-import { findBatchById, toBatchDTO } from '../models/harvestModel.js';
+import { MATCH_SELECT, scoreCandidate, loadExclusions } from './harvestMatchService.js';
+import { findBatchById, lockBatch, toBatchDTO } from '../models/harvestModel.js';
+import { estimateFulfilment, resolveMethod } from './fulfilmentService.js';
+import { marginGuard } from './marginService.js';
+import { round2 } from '../utils/numbers.js';
 import { logAudit } from './auditService.js';
 import { notifyBuyer } from './notificationService.js';
 
 const approveSchema = z.object({
   quantity: z.coerce.number().positive('must be greater than 0').max(100000).optional(),
   note: z.string().trim().max(500).optional(),
+  quoteToken: z.string().regex(/^[a-f0-9]{64}$/).optional(),
+  marginOverrideReason: z.string().trim().min(10).max(500).optional(),
 });
 const rejectSchema = z.object({ reason: z.string().trim().max(500).optional() });
 
@@ -28,6 +34,78 @@ async function loadMatch(id, client) {
   return rows[0] ? camelize(rows[0]) : null;
 }
 
+/** Shared preview/approval checks. Batch-first locking also matches re-run and close operations. */
+async function prepareApproval(client, user, matchId, input) {
+  const initial = (await client.query('SELECT farm_id, harvest_batch_id FROM harvest_matches WHERE id = $1', [matchId])).rows[0];
+  if (!initial) throw notFound('Match not found');
+  assertFarmAdmin(user, initial.farm_id);
+  let batch = await lockBatch(initial.harvest_batch_id, client);
+  const match = await lockMatch(client, matchId);
+  if (match.status !== 'SUGGESTED') throw conflict(`This match has already been ${match.status.toLowerCase()}`, 'MATCH_NOT_PENDING');
+  if (batch.status === 'CLOSED') throw conflict('This harvest batch is closed', 'BATCH_CLOSED');
+  // Keep editable commercial inputs stable through the transaction.
+  await client.query('SELECT id FROM farms WHERE id = $1 FOR SHARE', [batch.farm_id]);
+  await client.query('SELECT id FROM produce WHERE id = $1 FOR SHARE', [batch.produce_id]);
+  batch = await findBatchById(batch.id, client);
+  const demand = (await client.query('SELECT * FROM demand_requests WHERE id = $1 FOR UPDATE', [match.demand_request_id])).rows[0];
+  const buyer = (await client.query('SELECT * FROM buyer_profiles WHERE id = $1 FOR SHARE', [match.buyer_id])).rows[0];
+  if (!buyer?.is_active) throw conflict('This buyer is no longer active', 'BUYER_INACTIVE');
+  if (buyer.user_id) {
+    const account = (await client.query('SELECT is_active FROM users WHERE id = $1 FOR SHARE', [buyer.user_id])).rows[0];
+    if (!account?.is_active) throw conflict('This buyer account is no longer active', 'BUYER_INACTIVE');
+  }
+  if (!demand || !['OPEN', 'PARTIALLY_FULFILLED'].includes(demand.status)) throw conflict('This demand request is no longer open', 'DEMAND_NOT_OPEN');
+  if (demand.buyer_id !== match.buyer_id || (demand.farm_id && demand.farm_id !== batch.farm_id)) {
+    throw conflict('This demand is no longer available to this farm', 'MATCH_STALE');
+  }
+  const quantity = round2(input.quantity ?? Number(match.recommended_quantity));
+  if (!(quantity > 0)) throw conflict('Quantity must be at least 0.01', 'INVALID_QUANTITY');
+  if (quantity > Number(batch.remaining_quantity)) throw conflict('The batch no longer has enough unallocated stock', 'OVER_ALLOCATION');
+  const demandRemaining = round2(demand.quantity - demand.fulfilled_quantity);
+  if (quantity > demandRemaining) throw conflict('The quantity exceeds the buyer\'s remaining demand', 'DEMAND_EXCEEDED');
+  if (quantity < demandRemaining && demand.min_quantity && quantity < Number(demand.min_quantity)) {
+    throw conflict('The quantity is below the buyer\'s minimum delivery', 'BELOW_BUYER_MINIMUM');
+  }
+  if (quantity < demandRemaining && quantity < Number(batch.min_order_quantity || 0)) {
+    throw conflict('The quantity is below the farm\'s minimum order', 'BELOW_FARM_MINIMUM');
+  }
+  const { exclusions, cancelledBuyerIds } = await loadExclusions(client, batch.id);
+  if (exclusions.has(demand.id) || cancelledBuyerIds.has(buyer.id)) {
+    throw conflict('This buyer or demand was rejected or cancelled for this batch. Run matching again.', 'MATCH_STALE');
+  }
+  // Allocation permits a final top-up below minimum quantities; those checks ran above.
+  const finalTopUp = quantity === demandRemaining;
+  const candidate = { ...demand, min_quantity: finalTopUp ? null : demand.min_quantity,
+    buyer_type: buyer.buyer_type, region: buyer.region, preferred_collection_method: buyer.preferred_collection_method };
+  const scored = scoreCandidate(finalTopUp ? { ...batch, min_order_quantity: 0 } : batch, candidate, { supplyRemaining: Number(batch.remaining_quantity) });
+  if (scored.excluded) throw conflict(`${scored.reason}. Run matching again.`, 'MATCH_STALE');
+  if (Number(scored.unitPrice) !== Number(match.unit_price)) {
+    throw conflict('The farm or buyer price has changed. Run matching again before approving.', 'MATCH_STALE');
+  }
+  const fulfilment = estimateFulfilment(resolveMethod(buyer.preferred_collection_method, batch.fulfilment_methods), quantity, batch.fulfilment_costs);
+  const netMargin = marginGuard({ unitPrice: scored.unitPrice, cost: batch.production_cost, minMarginPct: batch.min_margin_pct ?? 0, quantity, fulfilment: fulfilment.perKg, fulfilmentTotal: fulfilment.total });
+  const review = {
+    matchId, buyerName: buyer.organisation_name, produceName: batch.produce_name, unit: batch.unit,
+    quantity, unitPrice: scored.unitPrice, revenue: round2(quantity * scored.unitPrice),
+    scheduledDate: scored.effectiveRequiredDate, fulfilment, netMargin,
+    requiresMarginOverride: netMargin.known && netMargin.status !== 'OK',
+    warnings: [],
+  };
+  if (demand.max_price === null) review.warnings.push('The buyer has not set a price. Confirm the farm price with the buyer.');
+  if (buyer.preferred_collection_method !== fulfilment.method) review.warnings.push('The buyer\'s preferred fulfilment method is unavailable. Confirm farm pickup with the buyer.');
+  if (!netMargin.known) review.warnings.push(netMargin.message);
+  const ownCosts = batch.fulfilment_costs?.[fulfilment.method];
+  if (ownCosts?.perOrder === undefined || ownCosts?.perKg === undefined) review.warnings.push('Fulfilment includes platform cost estimates. Record your farm costs in Settings for a more accurate margin.');
+  // An acknowledgement applies only to these exact commercial terms, including the edited quantity.
+  review.quoteToken = createHash('sha256').update(JSON.stringify(review)).digest('hex');
+  return { match, batch, review };
+}
+
+export async function previewApproval(user, matchId, input) {
+  const d = validate(approveSchema, input);
+  return withTransaction(async (client) => (await prepareApproval(client, user, matchId, d)).review);
+}
+
 /**
  * Farm admin approves a HarvestMatch suggestion (optionally with an edited quantity).
  * Creates the order, order item and allocation atomically; over-allocation is rejected.
@@ -35,18 +113,14 @@ async function loadMatch(id, client) {
 export async function approveMatch(user, matchId, input, ip) {
   const d = validate(approveSchema, input);
   const result = await withTransaction(async (client) => {
-    const match = await lockMatch(client, matchId);
-    assertFarmAdmin(user, match.farm_id);
-    if (match.status !== 'SUGGESTED') {
-      throw conflict(`This match has already been ${match.status.toLowerCase()}`, 'MATCH_NOT_PENDING');
+    const { match, review } = await prepareApproval(client, user, matchId, d);
+    if (d.quoteToken && d.quoteToken !== review.quoteToken) {
+      throw new AppError('Commercial terms changed. Review the updated estimate before approving.', 409, 'APPROVAL_QUOTE_CHANGED', review);
     }
-    const quantity = d.quantity ?? Number(match.recommended_quantity);
-
-    const buyer = (await client.query('SELECT preferred_collection_method FROM buyer_profiles WHERE id = $1', [match.buyer_id])).rows[0];
-    const farm = (await client.query('SELECT fulfilment_methods FROM farms WHERE id = $1', [match.farm_id])).rows[0];
-    const collectionMethod = farm.fulfilment_methods.includes(buyer.preferred_collection_method)
-      ? buyer.preferred_collection_method
-      : 'FARM_PICKUP';
+    if (review.requiresMarginOverride && (!d.marginOverrideReason || d.quoteToken !== review.quoteToken)) {
+      throw new AppError('Margin is below the farm minimum after fulfilment. Review the estimate and record a reason to proceed.', 409, 'MARGIN_REVIEW_REQUIRED', review);
+    }
+    const quantity = review.quantity;
 
     const { order } = await createAllocatedOrder(client, {
       batchId: match.harvest_batch_id,
@@ -56,7 +130,8 @@ export async function approveMatch(user, matchId, input, ip) {
       unitPrice: Number(match.unit_price),
       source: match.source === 'RECOVERY' ? 'RECOVERY' : 'HARVESTMATCH',
       status: 'CONFIRMED',
-      collectionMethod,
+      collectionMethod: review.fulfilment.method,
+      scheduledDate: review.scheduledDate,
       userId: user.id,
     });
 
@@ -69,7 +144,9 @@ export async function approveMatch(user, matchId, input, ip) {
     await logAudit(
       {
         farmId: match.farm_id, userId: user.id, action: 'MATCH_APPROVED', entityType: 'harvest_match', entityId: matchId,
-        details: { orderId: order.id, quantity, recommended: Number(match.recommended_quantity), unitPrice: Number(match.unit_price) }, ip,
+        details: { orderId: order.id, quantity, recommended: Number(match.recommended_quantity), unitPrice: review.unitPrice,
+          scheduledDate: review.scheduledDate, fulfilment: review.fulfilment, netMargin: review.netMargin,
+          marginOverrideReason: review.requiresMarginOverride ? d.marginOverrideReason : null }, ip,
       },
       client
     );
@@ -82,7 +159,7 @@ export async function approveMatch(user, matchId, input, ip) {
     farmId: m.farmId,
     type: 'ORDER_CONFIRMED',
     title: `Order #${result.order.id} confirmed`,
-    body: `${result.batch.farmName} has confirmed ${m.approvedQuantity}${result.batch.unit} of ${result.batch.produceName} for ${result.batch.harvestDate} at $${Number(m.unitPrice).toFixed(2)}/${result.batch.unit}.`,
+    body: `${result.batch.farmName} has confirmed ${m.approvedQuantity}${result.batch.unit} of ${result.batch.produceName} for ${result.order.scheduled_date} at $${Number(m.unitPrice).toFixed(2)}/${result.batch.unit}.`,
   });
   return { match: result.match, batch: result.batch, orderId: result.order.id };
 }

@@ -10,7 +10,7 @@ import { getPolicy } from './policyService.js';
 import { marginGuard } from './marginService.js';
 import { estimateFulfilment, resolveMethod } from './fulfilmentService.js';
 import { round2 } from '../utils/numbers.js';
-import { addDays, daysBetween } from '../utils/dates.js';
+import { addDays, daysBetween, todayISO } from '../utils/dates.js';
 import { camelize } from '../utils/case.js';
 import { notFound, conflict } from '../utils/errors.js';
 import { lockBatch, findBatchById, toBatchDTO } from '../models/harvestModel.js';
@@ -22,24 +22,28 @@ const LABEL = {
   FARM_PICKUP: 'farm pickup',
   DELIVERY: 'delivery',
   COMMUNITY_DROP: 'community drop',
+  CENTRAL_DROP: 'central drop',
 };
 const money = (n) => `$${Number(n).toFixed(2)}`;
 const normalise = (s) => String(s || '').trim().toLowerCase().replace(/\s+/g, ' ');
 
-/** Next occurrence of a recurring requirement on/after the harvest date. */
-export function effectiveRequiredDate(demand, harvestDate) {
+/** Next occurrence of a recurring requirement on/after the supplied calendar date. */
+export function effectiveRequiredDate(demand, onOrAfter) {
   const step = { WEEKLY: 7, BIWEEKLY: 14 }[demand.recurrence];
-  let date = demand.required_date;
-  if (demand.recurrence === 'NONE' || date >= harvestDate) return date;
-  for (let i = 0; i < 60 && date < harvestDate; i++) {
-    if (step) date = addDays(date, step);
-    else {
-      const [y, m, d] = date.split('-').map(Number);
-      const next = new Date(y, m, d); // +1 month
-      date = `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}-${String(next.getDate()).padStart(2, '0')}`;
-    }
-  }
-  return date;
+  const date = demand.required_date;
+  if (!demand.recurrence || demand.recurrence === 'NONE' || date >= onOrAfter) return date;
+  if (step) return addDays(date, Math.ceil(daysBetween(date, onOrAfter) / step) * step);
+  // Keep the original day-of-month anchor; Jan 31 -> Feb 28 -> Mar 31.
+  const [y, m, d] = date.split('-').map(Number);
+  const [targetY, targetM] = onOrAfter.split('-').map(Number);
+  const occurrence = (offset) => {
+    const month = new Date(Date.UTC(y, m - 1 + offset, 1));
+    const lastDay = new Date(Date.UTC(month.getUTCFullYear(), month.getUTCMonth() + 1, 0)).getUTCDate();
+    return `${month.getUTCFullYear()}-${String(month.getUTCMonth() + 1).padStart(2, '0')}-${String(Math.min(d, lastDay)).padStart(2, '0')}`;
+  };
+  const offset = (targetY - y) * 12 + targetM - m;
+  const next = occurrence(offset);
+  return next >= onOrAfter ? next : occurrence(offset + 1);
 }
 
 // ---- individual factor scores (0-100). Each returns { score, reason?, warning?, exclude? } ----
@@ -55,11 +59,12 @@ export function scoreProduce(batch, demand) {
   return { score: 0, exclude: 'Different produce' };
 }
 
-export function scoreDate(batch, demand) {
-  const required = effectiveRequiredDate(demand, batch.harvest_date);
+export function scoreDate(batch, demand, today = todayISO()) {
+  const required = effectiveRequiredDate(demand, batch.harvest_date > today ? batch.harvest_date : today);
   const gap = daysBetween(batch.harvest_date, required);
   if (gap < 0) return { score: 0, exclude: `Required ${-gap} day(s) before harvest date`, required };
-  const freshness = getPolicy().freshnessWindowDays;
+  if (required < today) return { score: 0, exclude: 'Required date has already passed', required };
+  const freshness = Math.min(getPolicy().freshnessWindowDays, Number(batch.shelf_life_days) || getPolicy().defaultShelfLifeDays);
   if (gap > freshness) {
     return { score: 0, exclude: `Required ${gap} days after harvest — beyond ${freshness}-day freshness window`, required };
   }
@@ -150,11 +155,15 @@ export function scoreLocation(batch, buyer) {
  * Scores one demand candidate against a batch. Pure function: no I/O.
  * Returns { excluded: true, reason } or a scored candidate with weighted total and reasons.
  */
-export function scoreCandidate(batch, demand, { supplyRemaining, reliability }) {
+export function scoreCandidate(batch, demand, { supplyRemaining, reliability, today = todayISO() }) {
+  if (batch.allowed_routes?.length && !batch.allowed_routes.includes(buyerRoute(demand.buyer_type))) {
+    return { excluded: true, reason: 'Buyer route is excluded by this batch\'s commercial constraints' };
+  }
+  if (demand.unit && batch.unit && demand.unit !== batch.unit) return { excluded: true, reason: 'Demand and harvest use different units' };
   const demandRemaining = round2(Number(demand.quantity) - Number(demand.fulfilled_quantity || 0));
   const factors = {
     produce: scoreProduce(batch, demand),
-    date: scoreDate(batch, demand),
+    date: scoreDate(batch, demand, today),
     price: scorePrice(batch, demand),
     quantity: scoreQuantity(demandRemaining, supplyRemaining, batch.unit, {
       buyerMin: demand.min_quantity ? Number(demand.min_quantity) : null,
@@ -208,6 +217,7 @@ export function rankAndAllocate(batch, candidates, context) {
     const result = scoreCandidate(batch, demand, {
       supplyRemaining: supply,
       reliability: context.reliability?.get(demand.buyer_id) ?? null,
+      today: context.today,
     });
     if (result.excluded) {
       if (result.reason !== 'Different produce') excluded.push(describeExcluded(demand, result.reason));
@@ -325,6 +335,9 @@ export async function runMatching(user, batchId, { runType = 'HARVESTMATCH', tri
     assertFarmAdmin(user, batch.farm_id);
     if (batch.status === 'CLOSED') throw conflict('Matching cannot run on a closed batch', 'BATCH_CLOSED');
     if (route && !DEMAND_ROUTE_KEYS.includes(route)) throw conflict(`HarvestMatch cannot run within the ${route} route`, 'ROUTE_NOT_MATCHABLE');
+    if (route && batch.allowed_routes?.length && !batch.allowed_routes.includes(route)) {
+      throw conflict('This route is excluded by the batch\'s commercial constraints', 'ROUTE_EXCLUDED');
+    }
 
     const ctx = await loadMatchingContext(client, batch);
     // Within a route (proposal §8.3): only buyers in that channel are ranked.
@@ -418,11 +431,12 @@ const MATCH_SELECT = `
          bp.preferred_collection_method,
          dr.quantity AS demand_quantity, dr.fulfilled_quantity AS demand_fulfilled_quantity,
          dr.required_date, dr.max_price, dr.recurrence, dr.produce_name AS demand_produce_name,
-         u.full_name AS decided_by_name
+         u.full_name AS decided_by_name, o.scheduled_date
     FROM harvest_matches hm
     JOIN buyer_profiles bp ON bp.id = hm.buyer_id
     JOIN demand_requests dr ON dr.id = hm.demand_request_id
-    LEFT JOIN users u ON u.id = hm.decided_by`;
+    LEFT JOIN users u ON u.id = hm.decided_by
+    LEFT JOIN orders o ON o.id = hm.order_id`;
 
 /** Current suggestions plus decided matches for a batch, with the latest run's exclusions. */
 export async function getMatchesForBatch(user, batchId, client) {
@@ -449,7 +463,11 @@ export async function getMatchesForBatch(user, batchId, client) {
     m.marketRoute = m.marketRoute || buyerRoute(m.buyerType);
     m.fulfilment = estimateFulfilment(resolveMethod(m.preferredCollectionMethod, batch.fulfilmentMethods), qty, batch.fulfilmentCosts);
     m.margin = marginGuard(guard);
-    m.netMargin = marginGuard({ ...guard, fulfilment: m.fulfilment.perKg });
+    m.netMargin = marginGuard({ ...guard, fulfilment: m.fulfilment.perKg, fulfilmentTotal: m.fulfilment.total });
+    const today = todayISO();
+    m.effectiveRequiredDate = m.scheduledDate || (m.status === 'SUGGESTED'
+      ? effectiveRequiredDate({ recurrence: m.recurrence, required_date: m.requiredDate }, batch.harvestDate > today ? batch.harvestDate : today)
+      : m.requiredDate);
     m.urgency = batch.routing?.urgency || null;
     return m;
   };

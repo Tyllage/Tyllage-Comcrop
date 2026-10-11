@@ -90,7 +90,7 @@ function scoreRoute(key, batch, lines, { demandFit, demandReason, live, sellDays
   const mainMethod = [...methods.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] || profile.method;
 
   const guard = marginGuard({
-    unitPrice: avgPrice, cost: batch.production_cost, minMarginPct: batch.min_margin_pct ?? 0, quantity: qty, fulfilment: fulfilmentPerKg,
+    unitPrice: avgPrice, cost: batch.production_cost, minMarginPct: batch.min_margin_pct ?? 0, quantity: qty, fulfilment: fulfilmentPerKg, fulfilmentTotal,
   });
   const avgOrderKg = orders > 0 ? qty / orders : 0;
   const lead = round2(weighted(lines, (l) => l.leadDays));

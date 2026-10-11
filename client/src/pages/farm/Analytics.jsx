@@ -84,7 +84,7 @@ function BaselineModal({ farmId, row, onClose, onSaved }) {
       footer={<><button className="btn" onClick={onClose}>Cancel</button><button className="btn btn-primary" form="baseline-form">Save baseline</button></>}>
       <form id="baseline-form" className="form" onSubmit={submit}>
         <p className="small muted">Record the farm's figure from before the pilot, measured the same way. Tyllage never invents baselines.</p>
-        <Field label={`Baseline value (${row.unit})`}><input className="input" type="number" min="0" step="0.1" value={form.baselineValue} onChange={(e) => setForm((f) => ({ ...f, baselineValue: e.target.value }))} required /></Field>
+        <Field label={`Baseline value (${row.unit})`}><input className="input" aria-label={`Baseline value (${row.unit})`} type="number" min={row.unit === '$/kg' ? undefined : 0} max={row.unit === '%' ? 100 : undefined} step="0.1" value={form.baselineValue} onChange={(e) => setForm((f) => ({ ...f, baselineValue: e.target.value }))} required /></Field>
         <Field label="Period"><input className="input" value={form.periodLabel} onChange={(e) => setForm((f) => ({ ...f, periodLabel: e.target.value }))} placeholder="e.g. Aug 2026, before Tyllage" /></Field>
         <Field label="How it was measured"><input className="input" value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} /></Field>
       </form>
@@ -102,7 +102,7 @@ function FrameworkRows({ rows, onEdit }) {
       <td className="num">
         {r.change === null ? '—' : (
           <Badge tone={r.direction === 'IMPROVED' ? 'low' : r.direction === 'WORSENED' ? 'high' : undefined}>
-            {r.change > 0 ? '+' : ''}{fmtValue(r.change, r.unit)}
+            {r.change > 0 ? '+' : ''}{fmtValue(r.change, r.unit === '%' ? 'pp' : r.unit)}
           </Badge>
         )}
       </td>

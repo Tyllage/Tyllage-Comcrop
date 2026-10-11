@@ -6,6 +6,8 @@
 
 ## Overview
 
+The October 2026 proposal-pack review and implementation map are in [Proposal alignment and pilot plan](docs/PROPOSAL_ALIGNMENT.md). See [Pilot release workflow](docs/PILOT_RELEASE.md) for validation and rollout.
+
 Tyllage is a farm commercial-intelligence and coordination platform. It brings expected harvest, buyer demand, sales routes, fulfilment conditions, margin and recovery options into one farm-facing view. It is developed as a **ComCrop-focused pilot** (proposal v3) and architected for **multi-farm expansion**.
 
 Tyllage does not replace SAFEF initiatives, wholesalers, logistics providers, retailers or farm-management systems. It treats them as routes, fulfilment partners and data sources to compare.
@@ -168,7 +170,7 @@ Then edit `server/.env`:
 | `PORT` | – | Default 4000; Railway injects it |
 | `DATABASE_URL` | **yes (prod)** | Postgres connection string |
 | `DATABASE_SSL` | – | `true` if your Postgres requires SSL |
-| `TEST_DATABASE_URL` | for tests | **Wiped on every test run** |
+| `TEST_DATABASE_URL` | for tests | **Wiped on every test run**. Separate database; name must end in `_test` or start with `test_` |
 | `JWT_SECRET` | **yes (prod)** | ≥ 32 random chars in production (the server refuses to start otherwise) |
 | `JWT_EXPIRES_IN` | – | Default `8h` |
 | `OPENAI_API_KEY` | – | Absent: deterministic template copy (mock mode) |
@@ -190,7 +192,7 @@ npm run migrate
 npm run seed
 ```
 
-`npm run seed` only seeds an empty database. To wipe and reseed, run `npm run seed --prefix server -- --force`, or reset everything with `npm run db:reset --prefix server`. Seeding refuses to run when `NODE_ENV=production` unless `ALLOW_DEMO_SEED=true`.
+`npm run seed` only seeds an empty database. In development, to wipe and reseed, run `npm run seed --prefix server -- --force`, or reset everything with `npm run db:reset --prefix server`. Initial demo seeding in production requires `ALLOW_DEMO_SEED=true`. **Reset, truncate and forced reseeding are always refused in production**, even with that flag.
 
 Seed dates are **relative to today**, so the demo always shows an at-risk Kale batch being harvested today.
 
@@ -236,7 +238,7 @@ In development builds the login page also shows a one-click demo-account picker.
 1. Sign in as **farmadmin@comcrop.demo**. The **Demand Radar** shows coverage by produce (proposal §8.1) and **Kale: 70kg expected, 24kg confirmed, 34.3% coverage, HIGH risk, 46kg unallocated**, with MarketRoute's recommended route.
 2. Click **Compare routes**. MarketRoute scores every route for the 46kg: Hotels & caterers (Hotel B, 18kg, buyer pickup), Restaurants & cafés (Restaurant A, 15kg, farm delivery at about $1.20/kg), Community & D2C (11kg), Wholesale and Retail (no eligible demand yet, so **Draft outreach**), and Rescue. Each route shows its price, fulfilment terms and cost, margin after fulfilment, and a **Why** breakdown. The route plan fills 18 → 15 → 11 → 2kg (Rescue).
 3. **Select & match** the recommended route. It is recorded as the **primary route**, and HarvestMatch ranks only that route's buyers. Caterer E is listed as not recommended because its price is below the farm minimum.
-4. Approve. The order records its fulfilment terms and estimated fulfilment cost.
+4. Choose **Review & approve**. Review revenue, fulfilment cost and net contribution for the entered quantity. Below-target margins require a reason and acknowledgement, saved in the audit log. The order records its fulfilment terms, estimated fulfilment cost and effective buyer required date.
 5. Click **Recover demand**. The ladder moves to **Alternative route**: Restaurants & cafés and Community & D2C can absorb the rest, with Rescue for the final kilograms.
 6. Create the Rescue listing (the farm must tick the suitability-for-sale confirmation) and **Generate Rescue campaign** in Tyllage Connect. Sending is a separate, explicit step; in mock mode messages appear in **Connect → WhatsApp message log**.
 7. **Insights** shows route performance (net margin after fulfilment, cancellation rate, recovered kg), coverage by crop, buyer reorders and the seven pilot KPIs against baselines the farm records.
@@ -266,7 +268,7 @@ Routes with live demand use the actual requests (price, buyer's fulfilment terms
 | Factor | Weight | Rule |
 |---|---|---|
 | Produce match | 30 | Exact = 100; close name (e.g. "Baby Kale" vs "Kale") = 75; otherwise excluded |
-| Date | 20 | 0–2 days after harvest = 100; 3–4 = 75; 5–7 = 45 (with a warning); before harvest or beyond the 7-day freshness window = excluded. Recurring demand rolls forward to its next occurrence |
+| Date | 20 | 0–2 days after harvest = 100; 3–4 = 75; later = 45 (with a warning). Past demand, dates before harvest, or beyond the earlier of crop shelf life and the policy freshness window (default 7 days) are excluded. Recurrence advances from today or harvest, whichever is later; monthly dates preserve their original day-of-month anchor |
 | Price | 20 | Buyer max ≥ preferred = 100; between min and preferred scales 50–100; no price = 70 with a warning; below the farm minimum = **excluded** |
 | Quantity | 10 | Fits remaining supply = 100; partial supply scales down |
 | Reliability | 10 | Completed ÷ (completed + buyer cancellations). **Neutral 60** with fewer than 2 past orders. No invented history |
@@ -301,7 +303,7 @@ All responses use `{ "success": true, "data": … }` or `{ "success": false, "me
 | `/api/produce` | `GET ?farmId` · `POST` · `GET/PATCH /:id` |
 | `/api/harvests` | `GET ?farmId` · `POST` · `GET/PATCH /:id` (incl. `allowedRoutes`) · `POST /:id/mark-available` · `POST /:id/close` · **`GET /:id/routes`** (MarketRoute) · **`POST /:id/routes/select`** `{ route }` · **`POST /:id/run-matching`** `{ route? }` · **`GET /:id/matches`** |
 | `/api/demand` | `GET` (farm: `?farmId`; buyer: own) · `POST` · `GET/PATCH /:id` · `POST /:id/cancel` |
-| `/api/matches` | `GET` · `POST /:id/approve` `{ quantity? }` · `POST /:id/reject` `{ reason? }` |
+| `/api/matches` | `GET` · `POST /:id/preview` `{ quantity? }` · `POST /:id/approve` `{ quantity?, quoteToken?, marginOverrideReason?, note? }` · `POST /:id/reject` `{ reason? }` |
 | `/api/orders` | `GET` · `GET /:id` · `PATCH /:id/status` `{ status, reason? }` |
 | `/api/recovery` | `GET ?farmId` (candidates and triggers) · `POST /harvests/:id/start` · `GET /harvests/:id` |
 | `/api/rescue` | `GET /public` · `GET ?farmId` · `POST` · `PATCH /:id` · `POST /:id/cancel` · `POST /:id/reserve` |
@@ -382,7 +384,7 @@ The catalog lives in `client/src/utils/httpStatus.js` and the page in `client/sr
 npm test
 ```
 
-This requires `TEST_DATABASE_URL`, a **disposable** database that is dropped and re-seeded per test file. The 118 tests cover:
+This requires `TEST_DATABASE_URL`, a **disposable** database that is dropped and re-seeded per test file. Its name must end in `_test` or start with `test_`; it must not identify `DATABASE_URL`. Production environments are rejected before tests load. GitHub Actions runs the suite against PostgreSQL and builds the client. Tests cover:
 
 - authentication and incorrect credentials
 - RBAC and farm access isolation, including spoofed `farmId`
@@ -390,6 +392,9 @@ This requires `TEST_DATABASE_URL`, a **disposable** database that is dropped and
 - demand creation
 - HarvestMatch scoring, weights, incompatible-price rejection and the greedy supply cap
 - over-allocation protection, including **concurrent approvals**
+- current commercial constraints on saved-match approval, private previews, audited margin overrides and changed-quote rejection
+- crop-specific shelf life, month-end recurrence, buyer required dates and incompatible units
+- negative margin baselines, bounded percentages, and production reset/truncate protection
 - cancelled-allocation restoration
 - recovery exclusions
 - Rescue validation and suitability confirmation

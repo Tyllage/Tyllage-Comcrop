@@ -85,6 +85,7 @@ export const demandController = {
 };
 
 export const matchController = {
+  preview: async (req, res) => ok(res, await matches.previewApproval(req.user, id(req), req.body)),
   list: async (req, res) =>
     ok(res, req.farmId ? await matches.listMatchesForFarm(req.farmId, { status: req.query.status }) : await matches.listMatchesForBuyer(req.user)),
   approve: async (req, res) => ok(res, await matches.approveMatch(req.user, id(req), req.body, req.ip)),

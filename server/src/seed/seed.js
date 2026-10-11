@@ -17,6 +17,7 @@ import { round2 } from '../utils/numbers.js';
 import { syncBatchStatus } from '../models/harvestModel.js';
 import { runMigrations } from '../db/migrate.js';
 import { estimateFulfilment } from '../services/fulfilmentService.js';
+import { assertNonProductionReset } from '../db/safety.js';
 
 export const DEMO_PASSWORD = 'TyllageDemo2026!';
 
@@ -334,11 +335,13 @@ export async function seed({ log = console.log } = {}) {
 }
 
 export async function truncateAll() {
+  assertNonProductionReset();
   await pool.query(`TRUNCATE ${TABLES.join(', ')} RESTART IDENTITY CASCADE`);
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   try {
+    if (process.argv.includes('--force')) assertNonProductionReset();
     if (env.isProduction && process.env.ALLOW_DEMO_SEED !== 'true') {
       throw new Error('Refusing to seed demo data in production. Set ALLOW_DEMO_SEED=true to override.');
     }

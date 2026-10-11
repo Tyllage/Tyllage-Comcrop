@@ -70,9 +70,18 @@ export const BASELINE_METRICS = [
 
 const baselineSchema = z.object({
   metricKey: z.enum(BASELINE_METRICS.map((m) => m.key)),
-  baselineValue: z.coerce.number().min(0).max(1000000).nullable(),
+  baselineValue: z.coerce.number().min(-1000000).max(1000000).nullable(),
   periodLabel: z.string().trim().max(80).nullable().optional(),
   notes: z.string().trim().max(1000).nullable().optional(),
+}).superRefine((d, ctx) => {
+  if (d.baselineValue === null) return;
+  const metric = BASELINE_METRICS.find((m) => m.key === d.metricKey);
+  if (metric.unit !== '$/kg' && d.baselineValue < 0) {
+    ctx.addIssue({ code: 'custom', path: ['baselineValue'], message: 'Only margin baselines may be negative' });
+  }
+  if (metric.unit === '%' && d.baselineValue > 100) {
+    ctx.addIssue({ code: 'custom', path: ['baselineValue'], message: 'Percentage baselines must be between 0 and 100' });
+  }
 });
 
 export async function saveBaseline(user, farmId, input, ip) {
