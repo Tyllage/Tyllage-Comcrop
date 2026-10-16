@@ -187,7 +187,7 @@ export default function MyOrders() {
                                 {dispute && (
                                   <div className="mt-8">
                                     <Badge tone={DISPUTE_TONE[dispute.status]}>Issue {dispute.status.toLowerCase()}</Badge>
-                                    <div className="cell-sub">{label(dispute.reason)}{dispute.resolution ? ` — ${dispute.resolution}` : ''}</div>
+                                    <div className="cell-sub">Reason: {label(dispute.reason)}{dispute.resolution ? ` — ${dispute.resolution}` : ''}</div>
                                   </div>
                                 )}
                               </td>
@@ -196,18 +196,18 @@ export default function MyOrders() {
                                 <div className="cell-sub">{o.scheduledDate ? date(o.scheduledDate, { weekday: true }) : 'Date to be confirmed'}</div>
                                 {o.communityName && <Badge tone="primary">{o.communityName}</Badge>}
                               </td>
-                              <td className="num">
-                                <div className="row" style={{ justifyContent: 'flex-end' }}>
-                                  {o.status==='COMPLETED' && !o.shopListingId && o.source!=='RESCUE' && <button className="btn btn-sm" onClick={()=>quoteOrder(o)}>Buy again</button>}
-                                  {o.shopListingId && <Link className="btn btn-sm" to={`/consumer/shop/${o.farmId}`}>Shop again</Link>}
+                              <td>
+                                <div className="order-actions">
                                   {!NO_DISPUTE.includes(o.status) && (
-                                    <button className="btn btn-sm" disabled={dispute?.status === 'OPEN'} title={dispute?.status === 'OPEN' ? 'An issue is already open for this order' : undefined}
+                                    <button className="btn btn-sm" style={{ gridColumn: 1 }} disabled={dispute?.status === 'OPEN'} title={dispute?.status === 'OPEN' ? 'An issue is already open for this order' : undefined}
                                       onClick={() => setDisputing(o)}>
                                       Report an issue
                                     </button>
                                   )}
+                                  {o.status==='COMPLETED' && !o.shopListingId && o.source!=='RESCUE' && <button className="btn btn-sm" style={{ gridColumn: 2 }} onClick={()=>quoteOrder(o)}>Buy again</button>}
+                                  {o.shopListingId && <Link className="btn btn-sm" style={{ gridColumn: 2 }} to={`/consumer/shop/${o.farmId}`}>Shop again</Link>}
                                   {CANCELLABLE.includes(o.status) && (
-                                    <button className="btn btn-danger btn-sm" onClick={() => setCancelling(o)}>Cancel</button>
+                                    <button className="btn btn-danger btn-sm" style={{ gridColumn: 2 }} onClick={() => setCancelling(o)}>Cancel</button>
                                   )}
                                 </div>
                               </td>

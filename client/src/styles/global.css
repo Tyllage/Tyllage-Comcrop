@@ -151,6 +151,10 @@ table.table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
 /* Row action buttons: one size, one line, evenly spaced. */
 .table-actions { display: flex; gap: 6px; align-items: center; flex-wrap: nowrap; }
 .table-actions .btn { min-width: 96px; }
+/* Buyer order actions: "Report an issue" always in the first slot, the follow-up action in the second. */
+.order-actions { display: grid; grid-template-columns: 132px 96px; gap: 8px; justify-content: end; align-items: center; }
+.order-actions .btn { width: 100%; }
+.table th.num { text-align: right; }
 
 /* ---------------------------------------------------------------- badges */
 .badge {
