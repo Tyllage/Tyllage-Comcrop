@@ -136,9 +136,12 @@ a:hover { text-decoration: underline; }
 table.table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
 .table th {
   text-align: left; font-weight: 600; font-size: 12px; color: var(--muted); background: var(--surface-2);
-  padding: 10px 14px; border-bottom: 1px solid var(--border); white-space: nowrap;
+  padding: 10px 12px; border-bottom: 1px solid var(--border); white-space: nowrap;
 }
-.table td { padding: 12px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.table td { padding: 12px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+/* Breathing room at the card edges so first/last columns (often badges) are not pressed against the border. */
+.table th:first-child, .table td:first-child { padding-left: 20px; }
+.table th:last-child, .table td:last-child { padding-right: 20px; }
 .table tr:last-child td { border-bottom: none; }
 .table tbody tr:hover { background: var(--surface-2); }
 .table tr.clickable { cursor: pointer; }
@@ -159,7 +162,7 @@ table.table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
 .badge-outline { background: transparent; border: 1px solid var(--border-strong); color: var(--muted); }
 
 /* ---------------------------------------------------------------- coverage bar */
-.coverage { display: flex; align-items: center; gap: 8px; min-width: 120px; }
+.coverage { display: flex; align-items: center; gap: 8px; min-width: 120px; max-width: 200px; }
 .coverage-track { flex: 1; height: 6px; border-radius: 999px; background: var(--neutral-soft); overflow: hidden; position: relative; }
 .coverage-fill { height: 100%; border-radius: 999px; }
 .coverage-fill.high { background: var(--high); } .coverage-fill.medium { background: var(--medium); } .coverage-fill.low { background: var(--low); }

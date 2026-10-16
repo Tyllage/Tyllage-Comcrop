@@ -49,7 +49,7 @@ export default function Harvests() {
                   <tbody>
                     {batches.map((b) => (
                       <tr key={b.id} className="clickable" onClick={() => navigate(`/farm/harvests/${b.id}`)}>
-                        <td className="cell-title">{b.produceName}<div className="cell-sub">Batch #{b.id}</div></td>
+                        <td className="cell-title nowrap">{b.produceName}<div className="cell-sub">Batch #{b.id}</div></td>
                         <td className="nowrap">{date(b.harvestDate)}<div className="cell-sub">{relativeDay(b.harvestDate)}</div></td>
                         <td className="num">{kg(b.expectedQuantity, b.unit)}</td>
                         <td className="num">{b.actualQuantity ? kg(b.actualQuantity, b.unit) : <span className="muted">—</span>}</td>
