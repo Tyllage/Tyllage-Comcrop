@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { PageHeader, Card, AsyncBoundary, EmptyState, FilterChips, Modal, Field, Badge, Notice } from '../../components/ui.jsx';
 import { StatusBadge } from '../../components/domain.jsx';
+import { Icons } from '../../components/Icons.jsx';
 import { kg, money, date, label } from '../../utils/format.js';
 
 const GROUPS = {
@@ -192,9 +193,11 @@ export default function MyOrders() {
                                 )}
                               </td>
                               <td>
-                                <div>{label(o.collectionMethod)}</div>
-                                <div className="cell-sub">{o.scheduledDate ? date(o.scheduledDate, { weekday: true }) : 'Date to be confirmed'}</div>
-                                {o.communityName && <Badge tone="primary">{o.communityName}</Badge>}
+                                <div className="collection-cell">
+                                  <div className="strong">{label(o.collectionMethod)}</div>
+                                  <div className="collection-line"><Icons.Clock />{o.scheduledDate ? date(o.scheduledDate, { weekday: true }) : 'Date to be confirmed'}</div>
+                                  {o.communityName && <div className="collection-line"><Icons.Pin />{o.communityName}</div>}
+                                </div>
                               </td>
                               <td>
                                 <div className="order-actions">
