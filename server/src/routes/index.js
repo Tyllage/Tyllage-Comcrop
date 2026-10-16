@@ -17,10 +17,12 @@ import miscRoutes from './miscRoutes.js';
 import aiRoutes from './aiRoutes.js';
 import adminRoutes from './adminRoutes.js';
 import { farmPoolRoutes, demandPoolRoutes } from './networkRoutes.js';
+import shopRoutes from './shopRoutes.js';
 
 const router = Router();
 
 router.use('/auth', authRoutes);
+router.use('/shop', shopRoutes);
 router.use('/farms', farmRoutes);
 router.use('/produce', produceRoutes);
 router.use('/harvests', harvestRoutes);

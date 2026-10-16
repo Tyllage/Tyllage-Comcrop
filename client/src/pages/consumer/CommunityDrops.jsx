@@ -93,6 +93,7 @@ export default function CommunityDrops() {
                       {d.region && <Badge tone="outline">{label(d.region)}</Badge>}
                     </div>
                     <div className="small row"><Icons.Pin width={14} /> {d.collectionPoint}</div>
+                    <div className="small muted">{d.orderCount}/{d.minOrders} orders · {d.orderCount >= d.minOrders ? 'Pickup minimum reached' : 'Minimum not yet reached — consider another listed date or point'}</div>
                     <div className="small">
                       <span className="strong">{date(d.dropDate, { weekday: true })}</span> · {hhmm(d.windowStart)}–{hhmm(d.windowEnd)}
                       <span className="muted"> · {relativeDay(d.dropDate)}</span>

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Wordmark } from '../components/Icons.jsx';
+import { Logo, Wordmark } from '../components/Icons.jsx';
 
 // Proposal v3 core workflow.
 const LOOP = ['Record expected harvest', 'Capture demand & coverage', 'Compare routes with MarketRoute', 'HarvestMatch within the route', 'Farmer approves allocation', 'Demand Recovery & Rescue', 'Insights'];
@@ -9,7 +9,13 @@ export default function AuthLayout({ children }) {
     <div className="auth-page">
       <aside className="auth-side">
         <div>
-          <div className="auth-tagline">From Harvest to Demand.</div>
+          <Link to="/" className="auth-brand" aria-label="Tyllage website">
+            <Logo size={36} />
+            <div>
+              <div className="auth-brand-name">Tyllage</div>
+              <div className="auth-brand-tag">From Harvest to Demand.</div>
+            </div>
+          </Link>
           <h1>Decide where upcoming harvest should go — before it becomes a commercial problem.</h1>
           <div className="loop">
             {LOOP.map((step, i) => (
@@ -27,8 +33,8 @@ export default function AuthLayout({ children }) {
       <main className="auth-main">
         <div className="auth-card">
           <Link to="/" className="small auth-back">← Back to the Tyllage website</Link>
-          {/* The logo sits with the form so it is visible on every screen size (the side panel is hidden on phones). */}
-          <div className="auth-logo"><Wordmark height={44} /></div>
+          {/* The side panel (with the logo) is hidden on phones, so the form shows the wordmark there instead. */}
+          <div className="auth-logo auth-mobile-logo"><Wordmark height={44} /></div>
           {children}
         </div>
       </main>

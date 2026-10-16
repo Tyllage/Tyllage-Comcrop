@@ -140,7 +140,7 @@ function Disputes() {
 
 function DropModal({ farmId, onClose, onSaved }) {
   const toast = useToast();
-  const [form, setForm] = useState({ communityName: '', collectionPoint: '', region: '', dropDate: addDaysISO(todayISO(), 5), windowStart: '10:00', windowEnd: '11:30', notes: '' });
+  const [form, setForm] = useState({ communityName: '', collectionPoint: '', region: '', dropDate: addDaysISO(todayISO(), 5), windowStart: '10:00', windowEnd: '11:30', notes: '', minOrders: 1 });
   const [error, setError] = useState(null);
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
   const submit = async (e) => {
@@ -164,6 +164,7 @@ function DropModal({ farmId, onClose, onSaved }) {
           <Field label="Date"><input className="input" type="date" min={todayISO()} value={form.dropDate} onChange={set('dropDate')} required /></Field>
           <Field label="Window start"><input className="input" type="time" value={form.windowStart} onChange={set('windowStart')} required /></Field>
           <Field label="Window end"><input className="input" type="time" value={form.windowEnd} onChange={set('windowEnd')} required /></Field>
+          <Field label="Minimum orders to run"><input aria-label="Minimum orders to run" className="input" type="number" min="1" max="1000" value={form.minOrders} onChange={set('minOrders')} required /></Field>
         </div>
       </form>
     </Modal>
@@ -196,7 +197,7 @@ function CommunityDrops({ farmId }) {
                 <tbody>
                   {rows.map((d) => (
                     <tr key={d.id}>
-                      <td className="cell-title">{d.communityName}</td>
+                      <td className="cell-title">{d.communityName}<div className="cell-sub">{d.orderCount}/{d.minOrders} orders to run</div></td>
                       <td>{d.collectionPoint}{d.region && <div className="cell-sub">{label(d.region)}</div>}</td>
                       <td className="nowrap">{date(d.dropDate, { weekday: true })}</td>
                       <td className="nowrap">{d.windowStart.slice(0, 5)}–{d.windowEnd.slice(0, 5)}</td>

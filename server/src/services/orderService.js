@@ -8,6 +8,7 @@ import { releaseOrderAllocations, createMultiLineOrder } from './allocationServi
 import { COLLECTION_METHODS } from '../config/rules.js';
 import { logAudit } from './auditService.js';
 import { notifyBuyer, notifyFarm } from './notificationService.js';
+import { lockRewardAccount, settleRewards } from './shopService.js';
 
 export const ORDER_TRANSITIONS = {
   PENDING: ['CONFIRMED', 'CANCELLED'],
@@ -84,6 +85,8 @@ export async function updateOrderStatus(user, id, input, ip) {
   const { status, reason } = validate(statusSchema, input);
 
   const result = await withTransaction(async (client) => {
+    const existing = (await client.query('SELECT community_drop_id FROM orders WHERE id=$1', [id])).rows[0];
+    if (existing?.community_drop_id) await client.query('SELECT id FROM community_drops WHERE id=$1 FOR UPDATE', [existing.community_drop_id]);
     const { rows } = await client.query('SELECT * FROM orders WHERE id = $1 FOR UPDATE', [id]);
     const order = rows[0];
     if (!order) throw notFound('Order not found');
@@ -103,6 +106,23 @@ export async function updateOrderStatus(user, id, input, ip) {
       throw badRequest('A cancellation reason is required', 'VALIDATION_ERROR');
     }
 
+    if (order.shop_listing_id) {
+      await lockRewardAccount(client, order.buyer_id, order.farm_id);
+      const listing = (await client.query(`SELECT kind, pickup_date,
+        (pickup_date + pickup_end) AT TIME ZONE 'Asia/Singapore' <= NOW() AS expired,
+        (pickup_date + pickup_start) AT TIME ZONE 'Asia/Singapore' <= NOW() AS started
+        FROM shop_listings WHERE id=$1`, [order.shop_listing_id])).rows[0];
+      if (isBuyer && !isFarm && status === 'CANCELLED' && listing.kind === 'SURPRISE_BAG' && listing.expired) {
+        throw conflict('Uncollected surprise bags cannot be cancelled after the pickup window. Contact the farm for help.', 'PICKUP_EXPIRED');
+      }
+      if (status === 'COMPLETED' && !listing.started) throw conflict('Collection has not opened yet', 'PICKUP_NOT_STARTED');
+      if (['READY','COMPLETED'].includes(status) && order.community_drop_id) {
+        const drop = (await client.query(`SELECT cd.*, (SELECT COUNT(*) FROM orders o
+          WHERE o.community_drop_id=cd.id AND o.status <> 'CANCELLED') AS n FROM community_drops cd WHERE cd.id=$1`, [order.community_drop_id])).rows[0];
+        if (drop.status === 'CANCELLED' || drop.n < drop.min_orders) throw conflict('Pickup minimum has not been met. Arrange another date or farm pickup first.', 'PICKUP_MINIMUM');
+      }
+    }
+
     let released = [];
     if (status === 'CANCELLED') {
       released = await releaseOrderAllocations(client, id);
@@ -118,6 +138,7 @@ export async function updateOrderStatus(user, id, input, ip) {
         [status, id]
       );
     }
+    await settleRewards(client, order, status);
     await logAudit(
       {
         farmId: order.farm_id, userId: user.id,

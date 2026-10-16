@@ -41,6 +41,9 @@ import FarmPool from './pages/farm/FarmPool.jsx';
 import DemandPool from './pages/farm/DemandPool.jsx';
 import FarmDirectory from './pages/market/FarmDirectory.jsx';
 import FarmProfile from './pages/market/FarmProfile.jsx';
+import Shop from './pages/consumer/Shop.jsx';
+import ShopManager from './pages/farm/ShopManager.jsx';
+import BuyerGrowth from './pages/farm/BuyerGrowth.jsx';
 
 /** Client-side route guard for UX only — the API enforces every permission server-side. */
 function RequireRole({ roles, children }) {
@@ -81,6 +84,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={user ? <Navigate to={homePathFor(user)} replace /> : <Login />} />
+      <Route path="/shop/:farmId" element={<main className="public-shop"><Shop /></main>} />
       <Route path="/status" element={<StatusCodes />} />
       <Route path="/status/:code" element={<StatusCodeRoute />} />
       {/* Public website for visitors; signed-in users go straight to their workspace. */}
@@ -95,6 +99,8 @@ export default function App() {
         <Route path="/farm/marketroute" element={<RequireRole roles={FARM_SIDE_ROLES}><MarketRoute /></RequireRole>} />
         <Route path="/farm/harvestmatch" element={<RequireRole roles={FARM_ADMINS}><HarvestMatch /></RequireRole>} />
         <Route path="/farm/orders" element={<RequireRole roles={FARM_SIDE_ROLES}><FarmOrders /></RequireRole>} />
+        <Route path="/farm/shop" element={<RequireRole roles={FARM_ADMINS}><ShopManager /></RequireRole>} />
+        <Route path="/farm/buyers" element={<RequireRole roles={FARM_ADMINS}><BuyerGrowth /></RequireRole>} />
         <Route path="/farm/recovery" element={<RequireRole roles={FARM_ADMINS}><Recovery /></RequireRole>} />
         <Route path="/farm/rescue" element={<RequireRole roles={FARM_SIDE_ROLES}><Rescue /></RequireRole>} />
         <Route path="/farm/campaigns" element={<RequireRole roles={FARM_ADMINS}><Campaigns /></RequireRole>} />
@@ -121,6 +127,8 @@ export default function App() {
         <Route path="/buyer/profile" element={<RequireRole roles={BUYERS}><Profile /></RequireRole>} />
 
         <Route path="/consumer" element={<RequireRole roles={CONSUMERS}><ConsumerHome /></RequireRole>} />
+        <Route path="/consumer/shop" element={<RequireRole roles={CONSUMERS}><Shop /></RequireRole>} />
+        <Route path="/consumer/shop/:farmId" element={<RequireRole roles={CONSUMERS}><Shop /></RequireRole>} />
         <Route path="/consumer/available" element={<RequireRole roles={CONSUMERS}><AvailableNow /></RequireRole>} />
         <Route path="/consumer/growing" element={<RequireRole roles={CONSUMERS}><GrowingSoon /></RequireRole>} />
         <Route path="/consumer/rescue" element={<RequireRole roles={CONSUMERS}><RescueMarket /></RequireRole>} />

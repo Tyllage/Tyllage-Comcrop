@@ -107,6 +107,11 @@ function CancelModal({ order, onClose, onDone }) {
 }
 
 export default function MyOrders() {
+  const toast = useToast();
+  const [reorder,setReorder] = useState(null);
+  const [reordering,setReordering] = useState(false);
+  const quoteOrder = async o => {try{setReorder({orderId:o.id,...await api.get(`/orders/${o.id}/reorder`)});}catch(e){toast(e.message,'error');}};
+  const confirmReorder = async () => {setReordering(true);try{const o=await api.post(`/orders/${reorder.orderId}/reorder`,{expectedTotal:reorder.total});toast(`Order #${o.id} created for farm confirmation`);setReorder(null);state.reload();}catch(e){toast(e.message,'error');}finally{setReordering(false);}};
   const { user } = useAuth();
   const isConsumer = user?.role === 'consumer';
   const state = useApi(
@@ -166,6 +171,7 @@ export default function MyOrders() {
                               <td>
                                 <div className="cell-title">#{o.id} · {o.farmName}</div>
                                 <div className="cell-sub">{label(o.source)} · placed {date(o.createdAt)}</div>
+                                {o.paymentStatus && <div className="cell-sub">{o.paymentStatus==='DEMO_PAID'?'Demo payment · no money charged':o.paymentStatus==='DEMO_REFUNDED'?'Demo payment reversed':'Reward · no payment'}</div>}
                               </td>
                               <td>
                                 {o.items.map((i) => (
@@ -192,6 +198,8 @@ export default function MyOrders() {
                               </td>
                               <td className="num">
                                 <div className="row" style={{ justifyContent: 'flex-end' }}>
+                                  {o.status==='COMPLETED' && !o.shopListingId && o.source!=='RESCUE' && <button className="btn btn-sm" onClick={()=>quoteOrder(o)}>Buy again</button>}
+                                  {o.shopListingId && <Link className="btn btn-sm" to={`/consumer/shop/${o.farmId}`}>Shop again</Link>}
                                   {!NO_DISPUTE.includes(o.status) && (
                                     <button className="btn btn-sm" disabled={dispute?.status === 'OPEN'} title={dispute?.status === 'OPEN' ? 'An issue is already open for this order' : undefined}
                                       onClick={() => setDisputing(o)}>
@@ -217,6 +225,7 @@ export default function MyOrders() {
       </AsyncBoundary>
       {cancelling && <CancelModal order={cancelling} onClose={() => setCancelling(null)} onDone={state.reload} />}
       {disputing && <DisputeModal order={disputing} onClose={() => setDisputing(null)} onDone={state.reload} />}
+      {reorder && <Modal title="Review your reorder" onClose={()=>setReorder(null)}><div className="stack"><p>Current harvest and prices. The farm confirms the new order.</p>{reorder.items.map(i=><div key={i.harvestBatchId} className="stat-line"><span>{i.produceName} · {kg(i.quantity,i.unit)}</span><strong>{money(i.price)}/{i.unit}</strong></div>)}<p>{label(reorder.collectionMethod)} · Total {money(reorder.total)}</p><button className="btn btn-primary" disabled={reordering} onClick={confirmReorder}>Place reorder</button></div></Modal>}
     </>
   );
 }

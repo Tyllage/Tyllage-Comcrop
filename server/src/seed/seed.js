@@ -46,6 +46,7 @@ const BUYERS = {
 };
 
 const TABLES = [
+  'reward_ledger', 'reward_accounts', 'buyer_relationships', 'shop_listings',
   'route_selections', 'pilot_baselines', 'platform_policies', 'order_disputes', 'demand_pool_members', 'demand_pools', 'batch_dispositions',
   'audit_logs', 'notifications', 'campaigns', 'allocations', 'harvest_matches', 'match_runs', 'order_items', 'orders',
   'rescue_listings', 'community_drops', 'demand_requests', 'buyer_profiles', 'harvest_batches', 'produce', 'farm_staff', 'farms', 'users',
@@ -313,6 +314,46 @@ export async function seed({ log = console.log } = {}) {
       farm_id: comcrop.id, harvest_batch_id: basil.id, quantity: 2, original_price: 28, rescue_price: 18,
       reason: 'COSMETIC_IMPERFECTION', reason_details: 'Demo: slightly bruised leaves, flavour unaffected',
       collection_deadline: ts(addDays(T, 3), 18), suitability_confirmed_by: farmAdminId, created_by: farmAdminId,
+    });
+
+    // ---------------------------------------------------------------- Tyllage Shop (farm-approved consumer offers)
+    const listing = (d) => insert(client, 'shop_listings', { farm_id: comcrop.id, approved_by: farmAdminId, ...d });
+    // A collected past pre-order gives the demo consumer harvest-reward points (1 point per whole dollar).
+    const pastPreorder = await listing({
+      harvest_batch_id: hKale.id, title: 'Kale harvest pack (Demo)', description: 'DEMO / PILOT DATA', kind: 'PREORDER',
+      quantity_per_pack: 1, pack_price: 14, original_value: 14, max_packs: 10, pickup_date: hKale.harvest_date,
+      pickup_start: '16:00', pickup_end: '18:00', is_active: false, created_at: ts(addDays(hKale.harvest_date, -4)),
+    });
+    const shopOrder = await seedOrder(client, { farmId: comcrop.id, buyerId: buyers.consumer.id, batch: hKale, quantity: 2, unitPrice: 14, status: 'COMPLETED', source: 'DIRECT', createdAt: ts(addDays(hKale.harvest_date, -2)), userId: users['consumer@tyllage.demo'].id, farmCosts: costs });
+    await client.query("UPDATE orders SET shop_listing_id = $1, shop_pack_count = 2, payment_status = 'DEMO_PAID' WHERE id = $2", [pastPreorder.id, shopOrder.id]);
+    await insert(client, 'reward_accounts', { buyer_id: buyers.consumer.id, farm_id: comcrop.id, points: 28 });
+    await insert(client, 'reward_ledger', { buyer_id: buyers.consumer.id, farm_id: comcrop.id, order_id: shopOrder.id, kind: 'EARN', points: 28, created_at: ts(hKale.harvest_date, 17) });
+    // Current offers: a neighbourhood pre-order, a farm-pickup surprise bag and a points reward.
+    await listing({
+      harvest_batch_id: lettuce.id, title: 'Next-week lettuce pre-order (Demo)', kind: 'PREORDER', quantity_per_pack: 1, pack_price: 13, original_value: 14,
+      description: 'About 1kg (four heads) of butterhead lettuce from next week’s harvest, collected at the Yishun neighbourhood pickup.',
+      max_packs: 15, pickup_date: drop.drop_date, pickup_start: drop.window_start, pickup_end: drop.window_end, community_drop_id: drop.id,
+    });
+    await listing({
+      harvest_batch_id: kale.id, title: 'Leafy greens surprise bag (Demo)', kind: 'SURPRISE_BAG', quantity_per_pack: 1, pack_price: 10, original_value: 14,
+      description: 'About 1kg of today’s kale surplus, possibly with smaller or uneven leaves. Contents vary.',
+      max_packs: 8, pickup_date: addDays(T, 1), pickup_start: '16:00', pickup_end: '18:00',
+    });
+    await listing({
+      harvest_batch_id: mint.id, title: 'Fresh mint bunch reward (Demo)', kind: 'REWARD', quantity_per_pack: 0.1, pack_price: 0, original_value: 2.6, points_cost: 25,
+      description: 'A small bunch of mint for loyal customers, redeemable with harvest-reward points.',
+      max_packs: 10, pickup_date: addDays(T, 6), pickup_start: '10:00', pickup_end: '12:00',
+      margin_override_reason: 'Demo: loyalty reward funded from harvest-reward points',
+    });
+
+    // ---------------------------------------------------------------- Buyer Growth relationship notes
+    await insert(client, 'buyer_relationships', {
+      farm_id: comcrop.id, buyer_id: buyers.restaurantA.id, next_follow_up: addDays(T, 3),
+      notes: 'DEMO: Prefers kale and basil on Tuesdays. Ask about a standing weekly order before the next menu change.',
+    });
+    await insert(client, 'buyer_relationships', {
+      farm_id: comcrop.id, buyer_id: buyers.catererE.id, next_follow_up: addDays(T, 1),
+      notes: 'DEMO: Price-sensitive; offer Nai Bai when there is surplus.',
     });
 
     // ---------------------------------------------------------------- a past campaign (mock mode)

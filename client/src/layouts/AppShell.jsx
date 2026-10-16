@@ -14,6 +14,8 @@ const FARM_NAV = [
   { to: '/farm/marketroute', label: 'MarketRoute', icon: Icons.Route },
   { to: '/farm/harvestmatch', label: 'HarvestMatch', icon: Icons.Match, admin: true },
   { to: '/farm/orders', label: 'Orders', icon: Icons.Orders },
+  { to: '/farm/shop', label: 'Tyllage Shop', icon: Icons.Supply, admin: true },
+  { to: '/farm/buyers', label: 'Buyer Growth', icon: Icons.Users, admin: true },
   { to: '/farm/recovery', label: 'Recovery', icon: Icons.Recovery, admin: true },
   { to: '/farm/rescue', label: 'Rescue', icon: Icons.Rescue },
   { to: '/farm/campaigns', label: 'Connect', icon: Icons.Campaign, admin: true },
@@ -43,6 +45,7 @@ const BUYER_NAV = [
 ];
 const CONSUMER_NAV = [
   { to: '/consumer', label: 'Home', icon: Icons.Home, end: true },
+  { to: '/consumer/shop', label: 'Tyllage Shop', icon: Icons.Supply },
   { to: '/consumer/available', label: 'Available Now', icon: Icons.Supply },
   { to: '/consumer/growing', label: 'Growing Soon', icon: Icons.Sprout },
   { to: '/market/farms', label: 'Farms', icon: Icons.Farm },

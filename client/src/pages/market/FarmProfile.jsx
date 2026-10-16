@@ -31,7 +31,7 @@ export default function FarmProfile() {
           <PageHeader
             title={farm.name}
             description={farm.region ? `${label(farm.region)} region · local partner farm on Tyllage` : 'Local partner farm on Tyllage'}
-            actions={<Link className="btn" to="/market/farms">All farms</Link>}
+            actions={<>{isConsumer && <Link className="btn btn-primary" to={`/consumer/shop/${id}`}>Visit farm shop</Link>}<Link className="btn" to="/market/farms">All farms</Link></>}
           />
           <div className="stack">
             <div className="grid grid-main-side">
