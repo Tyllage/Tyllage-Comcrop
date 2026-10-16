@@ -73,8 +73,12 @@ export function sendTemplateMessage({ to, templateName, languageCode = 'en', com
   });
 }
 
-/** Meta webhook verification handshake (GET). Returns the challenge or null. */
+/**
+ * Meta webhook verification handshake (GET). Returns the challenge or null.
+ * Meta's challenge is a short numeric/alphanumeric token; anything else is rejected so the echo cannot carry markup.
+ */
 export function verifyWebhook({ mode, token, challenge }) {
-  if (mode === 'subscribe' && env.WHATSAPP_VERIFY_TOKEN && token === env.WHATSAPP_VERIFY_TOKEN) return challenge;
-  return null;
+  if (mode !== 'subscribe' || !env.WHATSAPP_VERIFY_TOKEN || token !== env.WHATSAPP_VERIFY_TOKEN) return null;
+  if (typeof challenge !== 'string' || !/^[A-Za-z0-9_-]{1,128}$/.test(challenge)) return null;
+  return challenge;
 }

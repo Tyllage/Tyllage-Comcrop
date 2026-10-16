@@ -162,7 +162,8 @@ export const whatsappController = {
       challenge: req.query['hub.challenge'],
     });
     if (challenge === null) return res.sendStatus(403);
-    res.status(200).send(String(challenge));
+    // Plain text + nosniff: the echoed token is never interpreted as HTML.
+    res.status(200).type('text/plain').set('X-Content-Type-Options', 'nosniff').send(challenge);
   },
   // Delivery status callbacks: acknowledged; status persistence is a later enhancement.
   receive: (_req, res) => res.sendStatus(200),
