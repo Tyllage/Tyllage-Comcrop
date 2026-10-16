@@ -170,6 +170,19 @@
 .site-card, .site-steps li, .site-produce-card, .site-list > div { transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease; }
 .site-card:hover, .site-steps li:hover, .site-produce-card:hover { transform: translateY(-3px); box-shadow: 0 14px 30px rgba(2, 65, 35, 0.1); border-color: #bcd8b6; }
 .reveal.site-card:hover, .reveal.site-produce-card:hover, .site-steps li.reveal:hover { transition-delay: 0ms; }
+/* floating actions: back to top + WhatsApp chat */
+.site-float { position: fixed; right: 24px; bottom: 24px; z-index: 40; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.site-float-btn { width: 52px; height: 52px; border-radius: 50%; border: 0; display: grid; place-items: center; cursor: pointer;
+  box-shadow: 0 8px 22px rgba(2, 65, 35, 0.22); transition: transform 0.2s ease, opacity 0.2s ease, visibility 0.2s, background 0.15s; }
+.site-float-btn:hover { transform: translateY(-2px); }
+.site-float-btn:focus-visible { outline: 3px solid var(--leaf); outline-offset: 3px; }
+.site-to-top { width: 44px; height: 44px; background: var(--forest); color: #fff; opacity: 0; visibility: hidden; transform: translateY(8px); }
+.site-to-top.visible { opacity: 1; visibility: visible; transform: none; }
+.site-to-top.visible:hover { background: var(--forest-2); transform: translateY(-2px); }
+.site-to-top svg { width: 20px; height: 20px; }
+.site-whatsapp { background: #25d366; color: #fff; }
+.site-whatsapp:hover { background: #1ebe5b; }
+@media (max-width: 640px) { .site-float { right: 16px; bottom: 16px; } }
 @media (prefers-reduced-motion: reduce) {
   .site *, .site *::after { transition: none !important; animation: none !important; }
 }
