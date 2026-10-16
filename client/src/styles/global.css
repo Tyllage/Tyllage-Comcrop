@@ -161,6 +161,7 @@ table.table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
 .badge-info { background: var(--info-soft); color: var(--info); }
 .badge-primary { background: var(--primary-soft); color: var(--primary); }
 .badge-outline { background: transparent; border: 1px solid var(--border-strong); color: var(--muted); }
+.badge-wrap { white-space: normal; line-height: 1.4; padding-top: 3px; padding-bottom: 3px; }
 
 /* ---------------------------------------------------------------- coverage bar */
 .coverage { display: flex; align-items: center; gap: 8px; min-width: 120px; max-width: 200px; }

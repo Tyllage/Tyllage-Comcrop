@@ -56,7 +56,7 @@ export default function Recovery() {
                 <ul className="action-list">
                   {rows.map((c) => (
                     <li key={c.id} className="action-item" style={{ cursor: 'pointer', background: selected === c.id ? 'var(--primary-soft)' : undefined, alignItems: 'flex-start' }} onClick={() => setSelected(c.id)}>
-                      <div style={{ flex: 1 }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
                         <div className="row-between">
                           <span className="strong">{c.produceName}</span>
                           <RiskBadge level={c.riskLevel} />
@@ -64,7 +64,7 @@ export default function Recovery() {
                         <div className="small muted">{date(c.harvestDate)} · {kg(c.unallocatedQuantity, c.unit)} unallocated</div>
                         <div className="mt-8"><CoverageBar value={c.demandCoverage} risk={c.riskLevel} /></div>
                         <div className="row mt-8" style={{ gap: 4 }}>
-                          {c.triggers.map((t) => <Badge key={t.code} tone="outline">{t.label}</Badge>)}
+                          {c.triggers.map((t) => <Badge key={t.code} tone="outline" className="badge-wrap">{t.label}</Badge>)}
                         </div>
                         {c.lastRecoveryAt && <div className="small muted mt-8">Last recovery {dateTime(c.lastRecoveryAt)}</div>}
                       </div>

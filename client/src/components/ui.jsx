@@ -44,8 +44,8 @@ export function KpiCard({ label, value, sub, tone = 'neutral', icon }) {
   );
 }
 
-export function Badge({ children, tone, dot }) {
-  return <span className={`badge ${tone ? `badge-${tone}` : ''} ${dot ? 'badge-dot' : ''}`}>{children}</span>;
+export function Badge({ children, tone, dot, className }) {
+  return <span className={`badge ${tone ? `badge-${tone}` : ''} ${dot ? 'badge-dot' : ''} ${className || ''}`}>{children}</span>;
 }
 
 export function Loading({ label = 'Loading…' }) {
