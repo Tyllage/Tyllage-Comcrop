@@ -4,6 +4,7 @@ import { useApi } from '../../hooks/useApi.js';
 import { useFarm } from '../../context/FarmContext.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
+import { useDialog } from '../../context/DialogContext.jsx';
 import { AsyncBoundary, Card, EmptyState, Field, FilterChips, Modal, PageHeader, Tabs } from '../../components/ui.jsx';
 import { StatusBadge } from '../../components/domain.jsx';
 import { Icons } from '../../components/Icons.jsx';
@@ -19,6 +20,7 @@ const FILTERS = [
 const NEXT = { PENDING: ['CONFIRMED', 'Confirm'], CONFIRMED: ['READY', 'Mark ready'], READY: ['COMPLETED', 'Complete'] };
 
 function OrdersTable({ farmId }) {
+  const dialog = useDialog();
   const { isFarmAdmin } = useAuth();
   const toast = useToast();
   const [status, setStatus] = useState(FILTERS[0].value);
@@ -28,7 +30,12 @@ function OrdersTable({ farmId }) {
   const update = async (order, next) => {
     let reason;
     if (next === 'CANCELLED') {
-      reason = window.prompt(`Cancel order #${order.id} for ${order.buyerName}? Stock will return to the batch. Reason:`);
+      reason = await dialog.prompt({
+        title: `Cancel order #${order.id} for ${order.buyerName}?`, tone: 'danger', icon: 'Orders',
+        message: 'The stock returns to the harvest batch so Demand Recovery can offer it to other buyers.',
+        inputLabel: 'Reason for the buyer', placeholder: 'e.g. Harvest came in short this week', required: true,
+        confirmLabel: 'Cancel order', cancelLabel: 'Keep order',
+      });
       if (!reason) return;
     }
     try {
@@ -172,6 +179,7 @@ function DropModal({ farmId, onClose, onSaved }) {
 }
 
 function CommunityDrops({ farmId }) {
+  const dialog = useDialog();
   const { isFarmAdmin } = useAuth();
   const toast = useToast();
   const [creating, setCreating] = useState(false);
@@ -208,7 +216,11 @@ function CommunityDrops({ farmId }) {
                         {isFarmAdmin && d.status === 'SCHEDULED' && (
                           <>
                             <button className="btn btn-sm" onClick={() => setStatus(d, 'COMPLETED')}>Complete</button>{' '}
-                            <button className="btn btn-sm btn-ghost" onClick={() => window.confirm('Cancel this drop?') && setStatus(d, 'CANCELLED')}>Cancel</button>
+                            <button className="btn btn-sm btn-ghost" onClick={async () => (await dialog.confirm({
+                              title: `Cancel the ${d.communityName} pickup?`, tone: 'danger', icon: 'Pin',
+                              message: 'Customers will need another pickup date or farm pickup for their orders.',
+                              confirmLabel: 'Cancel pickup', cancelLabel: 'Keep pickup',
+                            })) && setStatus(d, 'CANCELLED')}>Cancel</button>
                           </>
                         )}
                       </td>

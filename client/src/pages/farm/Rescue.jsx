@@ -5,6 +5,7 @@ import { useApi } from '../../hooks/useApi.js';
 import { useFarm } from '../../context/FarmContext.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
+import { useDialog } from '../../context/DialogContext.jsx';
 import { AsyncBoundary, Card, EmptyState, Notice, PageHeader } from '../../components/ui.jsx';
 import { StatusBadge } from '../../components/domain.jsx';
 import { Icons } from '../../components/Icons.jsx';
@@ -15,6 +16,7 @@ export default function Rescue() {
   const { farmId } = useFarm();
   const { isFarmAdmin } = useAuth();
   const toast = useToast();
+  const dialog = useDialog();
   const navigate = useNavigate();
   const [creating, setCreating] = useState(false);
   const listings = useApi(() => api.get('/rescue', { farmId }), [farmId], { enabled: Boolean(farmId) });
@@ -22,7 +24,11 @@ export default function Rescue() {
   const eligible = (batches.data || []).filter((b) => b.unallocatedQuantity > 0);
 
   const cancel = async (l) => {
-    if (!window.confirm(`Cancel this Rescue listing? Unsold produce returns to the batch.`)) return;
+    if (!(await dialog.confirm({
+      title: 'Cancel this Rescue listing?', tone: 'danger', icon: 'Rescue',
+      message: 'Unsold produce returns to the harvest batch. Reservations already made are kept.',
+      confirmLabel: 'Cancel listing', cancelLabel: 'Keep listing',
+    }))) return;
     try {
       await api.post(`/rescue/${l.id}/cancel`);
       toast('Rescue listing cancelled');

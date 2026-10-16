@@ -4,6 +4,7 @@ import { useApi } from '../../hooks/useApi.js';
 import { useFarm } from '../../context/FarmContext.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
+import { useDialog } from '../../context/DialogContext.jsx';
 import { AsyncBoundary, Badge, Card, EmptyState, Field, FilterChips, Modal, PageHeader, Tabs, fieldErrors } from '../../components/ui.jsx';
 import { StatusBadge } from '../../components/domain.jsx';
 import { Icons } from '../../components/Icons.jsx';
@@ -114,6 +115,7 @@ function AddBuyerModal({ farmId, onClose, onSaved }) {
 }
 
 export default function Demand() {
+  const dialog = useDialog();
   const { farmId } = useFarm();
   const { isFarmAdmin } = useAuth();
   const toast = useToast();
@@ -124,7 +126,11 @@ export default function Demand() {
   const buyers = useApi(() => api.get(`/farms/${farmId}/buyers`), [farmId], { enabled: Boolean(farmId) });
 
   const cancel = async (d) => {
-    if (!window.confirm(`Cancel ${d.buyerName}'s demand for ${d.produceName}?`)) return;
+    if (!(await dialog.confirm({
+      title: `Cancel ${d.buyerName}’s ${d.produceName} demand?`, tone: 'danger', icon: 'Demand',
+      message: 'It will no longer count towards demand coverage or be matched to your harvests.',
+      confirmLabel: 'Cancel demand', cancelLabel: 'Keep demand',
+    }))) return;
     try {
       await api.post(`/demand/${d.id}/cancel`);
       toast('Demand cancelled');

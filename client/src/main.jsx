@@ -5,6 +5,7 @@ import App from './App.jsx';
 import { AuthProvider } from './context/AuthContext.jsx';
 import { FarmProvider } from './context/FarmContext.jsx';
 import { ToastProvider } from './context/ToastContext.jsx';
+import { DialogProvider } from './context/DialogContext.jsx';
 import './styles/global.css';
 
 createRoot(document.getElementById('root')).render(
@@ -13,7 +14,9 @@ createRoot(document.getElementById('root')).render(
       <AuthProvider>
         <FarmProvider>
           <ToastProvider>
-            <App />
+            <DialogProvider>
+              <App />
+            </DialogProvider>
           </ToastProvider>
         </FarmProvider>
       </AuthProvider>

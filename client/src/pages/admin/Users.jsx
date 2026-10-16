@@ -3,6 +3,7 @@ import { api } from '../../services/api.js';
 import { useApi } from '../../hooks/useApi.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
+import { useDialog } from '../../context/DialogContext.jsx';
 import { PageHeader, Card, AsyncBoundary, EmptyState, FilterChips, Badge } from '../../components/ui.jsx';
 import { dateTime, label } from '../../utils/format.js';
 
@@ -17,13 +18,18 @@ const FARM_ROLES = ['platform_admin', 'farm_admin', 'farm_staff'];
 export default function Users() {
   const { user: me } = useAuth();
   const toast = useToast();
+  const dialog = useDialog();
   const state = useApi(() => api.get('/users'), []);
   const [filter, setFilter] = useState('all');
   const [busyId, setBusyId] = useState(null);
 
   const toggle = async (u) => {
     const next = !u.isActive;
-    if (!next && !window.confirm(`Deactivate ${u.fullName}? They will no longer be able to sign in.`)) return;
+    if (!next && !(await dialog.confirm({
+      title: `Deactivate ${u.fullName}?`, tone: 'danger', icon: 'User',
+      message: 'They will no longer be able to sign in. You can reactivate the account at any time.',
+      confirmLabel: 'Deactivate', cancelLabel: 'Keep active',
+    }))) return;
     setBusyId(u.id);
     try {
       await api.patch(`/users/${u.id}/active`, { isActive: next });

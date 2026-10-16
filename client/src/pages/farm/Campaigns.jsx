@@ -4,6 +4,7 @@ import { api } from '../../services/api.js';
 import { useApi } from '../../hooks/useApi.js';
 import { useFarm } from '../../context/FarmContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
+import { useDialog } from '../../context/DialogContext.jsx';
 import { AsyncBoundary, Badge, Card, EmptyState, Field, Modal, Notice, PageHeader, Tabs } from '../../components/ui.jsx';
 import { StatusBadge } from '../../components/domain.jsx';
 import { Icons } from '../../components/Icons.jsx';
@@ -93,6 +94,7 @@ function GenerateModal({ farmId, onClose, onCreated }) {
 
 function CampaignEditor({ id, onClose, onChanged }) {
   const toast = useToast();
+  const dialog = useDialog();
   const state = useApi(() => api.get(`/campaigns/${id}`), [id]);
   const [content, setContent] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -116,9 +118,17 @@ function CampaignEditor({ id, onClose, onChanged }) {
   };
   const save = () => call(() => api.patch(`/campaigns/${id}`, { finalContent: text }), () => 'Changes saved');
   const approve = () => call(async () => { if (dirty) await api.patch(`/campaigns/${id}`, { finalContent: text }); return api.post(`/campaigns/${id}/approve`); }, () => 'Campaign approved');
-  const send = () => window.confirm(`Send to ${c.recipientsPreview} opted-in recipient(s) via WhatsApp?`) &&
+  const send = async () => (await dialog.confirm({
+    title: 'Send this campaign on WhatsApp?', icon: 'Send',
+    message: `It goes to ${c.recipientsPreview} opted-in recipient(s) straight away and cannot be unsent.`,
+    confirmLabel: 'Send now', cancelLabel: 'Not yet',
+  })) &&
     call(() => api.post(`/campaigns/${id}/send`), (r) => `Sent: ${Object.entries(r.delivery).map(([k, v]) => `${v} ${label(k).toLowerCase()}`).join(', ') || 'no recipients'}`);
-  const cancel = () => window.confirm('Cancel this campaign?') && call(() => api.post(`/campaigns/${id}/cancel`), () => 'Campaign cancelled');
+  const cancel = async () => (await dialog.confirm({
+    title: 'Cancel this campaign?', tone: 'danger', icon: 'Campaign',
+    message: 'It will not be sent. You can draft a new campaign at any time.',
+    confirmLabel: 'Cancel campaign', cancelLabel: 'Keep campaign',
+  })) && call(() => api.post(`/campaigns/${id}/cancel`), () => 'Campaign cancelled');
   const [variations, setVariations] = useState(null);
   const loadVariations = async () => {
     setBusy(true);

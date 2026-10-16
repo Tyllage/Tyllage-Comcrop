@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../../services/api.js';
 import { useApi } from '../../hooks/useApi.js';
 import { useToast } from '../../context/ToastContext.jsx';
+import { useDialog } from '../../context/DialogContext.jsx';
 import { AsyncBoundary, Badge, Card, Notice } from '../ui.jsx';
 import { ScoreRing } from '../domain.jsx';
 import { Icons } from '../Icons.jsx';
@@ -34,6 +35,7 @@ export function RoutePlan({ plan, total, unit }) {
 }
 
 function RouteRow({ route: r, unit, recommended, canAct, busy, onSelect, onOutreach }) {
+  const dialog = useDialog();
   const [open, setOpen] = useState(false);
   const muted = ['EXCLUDED', 'PAST_WINDOW'].includes(r.status);
   const isRescue = r.key === 'RESCUE';
@@ -84,7 +86,11 @@ function RouteRow({ route: r, unit, recommended, canAct, busy, onSelect, onOutre
           )}
           {canAct && r.action === 'REVIEW_PRICE' && (
             <button className="btn btn-sm btn-ghost" disabled={busy}
-              onClick={() => window.confirm(`Margin Guard: ${r.margin.message}. Select ${r.label} anyway?`) && onSelect(r)}>Select anyway</button>
+              onClick={async () => (await dialog.confirm({
+                title: `Select ${r.label} below your margin?`, tone: 'warning', icon: 'Analytics',
+                message: `Margin Guard: ${r.margin.message}. You can still choose this route, but it may not cover your costs.`,
+                confirmLabel: 'Select anyway', cancelLabel: 'Keep reviewing',
+              })) && onSelect(r)}>Select anyway</button>
           )}
         </div>
       </div>

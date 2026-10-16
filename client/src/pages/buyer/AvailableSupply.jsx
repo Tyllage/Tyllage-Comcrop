@@ -3,6 +3,7 @@ import { api } from '../../services/api.js';
 import { useApi } from '../../hooks/useApi.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
+import { useDialog } from '../../context/DialogContext.jsx';
 import { PageHeader, Card, AsyncBoundary, EmptyState, Tabs, Notice, Field } from '../../components/ui.jsx';
 import { Icons } from '../../components/Icons.jsx';
 import { kg, money, date, relativeDay, label } from '../../utils/format.js';
@@ -87,6 +88,7 @@ function CartPanel({ cart, setCart, onPlaced }) {
 
 export default function AvailableSupply() {
   const toast = useToast();
+  const dialog = useDialog();
   const state = useApi(() => api.get('/marketplace/supply'), []);
   const [tab, setTab] = useState('availableNow');
   const [requesting, setRequesting] = useState(null);
@@ -95,14 +97,16 @@ export default function AvailableSupply() {
 
   const qtyFor = (b) => qtys[b.id] ?? String(defaultOrderQty(b));
 
-  const addToCart = (b) => {
+  const addToCart = async (b) => {
     const quantity = Number(qtyFor(b));
     const msg = orderQtyError(b, quantity);
     if (msg) return toast(msg, 'error');
     if (cart.length && cart[0].item.farmId !== b.farmId) {
-      const replace = window.confirm(
-        `Your order already contains produce from ${cart[0].item.farmName}. One order can only contain produce from one farm.\n\nClear it and start a new order from ${b.farmName}?`
-      );
+      const replace = await dialog.confirm({
+        title: `Start a new order from ${b.farmName}?`, tone: 'warning', icon: 'Farm',
+        message: `Your order already has produce from ${cart[0].item.farmName}. One order can only come from one farm, so this clears your current order.`,
+        confirmLabel: 'Clear and start new order', cancelLabel: `Keep ${cart[0].item.farmName} order`,
+      });
       if (!replace) return toast(`Not added — place or clear your ${cart[0].item.farmName} order first.`, 'error');
       setCart([{ item: b, quantity }]);
     } else {

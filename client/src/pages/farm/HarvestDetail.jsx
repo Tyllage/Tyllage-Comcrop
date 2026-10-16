@@ -4,6 +4,7 @@ import { api } from '../../services/api.js';
 import { useApi } from '../../hooks/useApi.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
+import { useDialog } from '../../context/DialogContext.jsx';
 import { AsyncBoundary, Card, Notice } from '../../components/ui.jsx';
 import { CoverageBar, RiskBadge, StatusBadge, StockBar } from '../../components/domain.jsx';
 import { Icons } from '../../components/Icons.jsx';
@@ -48,6 +49,7 @@ export default function HarvestDetail() {
   const location = useLocation();
   const { isFarmAdmin } = useAuth();
   const toast = useToast();
+  const dialog = useDialog();
   const state = useApi(() => api.get(`/recovery/harvests/${id}`), [id]);
   const [editing, setEditing] = useState(false);
   const [matching, setMatching] = useState(false);
@@ -102,7 +104,11 @@ export default function HarvestDetail() {
                   <button className="btn" onClick={() => setEditing(true)}>Edit batch</button>
                   {!b.markedAvailable && <button className="btn" onClick={() => act(`/harvests/${b.id}/mark-available`, 'Marked available')}>Mark available</button>}
                   {isFarmAdmin && (
-                    <button className="btn btn-danger" onClick={() => window.confirm('Close this batch? It will be archived and no further matching can run.') && act(`/harvests/${b.id}/close`, 'Batch closed')}>
+                    <button className="btn btn-danger" onClick={async () => (await dialog.confirm({
+                      title: `Close the ${b.produceName} batch?`, tone: 'danger', icon: 'Harvest',
+                      message: 'It will be archived and no further matching can run. Existing orders are kept.',
+                      confirmLabel: 'Close batch', cancelLabel: 'Keep open',
+                    })) && act(`/harvests/${b.id}/close`, 'Batch closed')}>
                       Close batch
                     </button>
                   )}

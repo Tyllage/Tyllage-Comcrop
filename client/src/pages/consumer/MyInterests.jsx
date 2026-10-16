@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { api } from '../../services/api.js';
 import { useApi } from '../../hooks/useApi.js';
 import { useToast } from '../../context/ToastContext.jsx';
+import { useDialog } from '../../context/DialogContext.jsx';
 import { PageHeader, Card, AsyncBoundary, EmptyState, Badge } from '../../components/ui.jsx';
 import { StatusBadge } from '../../components/domain.jsx';
 import { Icons } from '../../components/Icons.jsx';
@@ -11,12 +12,17 @@ import { RegisterDemandModal, OPEN_DEMAND } from '../buyer/demandShared.jsx';
 
 export default function MyInterests() {
   const toast = useToast();
+  const dialog = useDialog();
   const state = useApi(() => api.get('/demand'), []);
   const [open, setOpen] = useState(false);
   const [busyId, setBusyId] = useState(null);
 
   const cancel = async (d) => {
-    if (!window.confirm(`Remove your interest in ${d.produceName}?`)) return;
+    if (!(await dialog.confirm({
+      title: `Remove your interest in ${d.produceName}?`, tone: 'danger', icon: 'Heart',
+      message: 'Farms will no longer let you know when it is ready to harvest.',
+      confirmLabel: 'Remove', cancelLabel: 'Keep it',
+    }))) return;
     setBusyId(d.id);
     try {
       await api.post(`/demand/${d.id}/cancel`);

@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { api } from '../../services/api.js';
 import { useApi } from '../../hooks/useApi.js';
 import { useToast } from '../../context/ToastContext.jsx';
+import { useDialog } from '../../context/DialogContext.jsx';
 import { PageHeader, Card, AsyncBoundary, EmptyState, Badge } from '../../components/ui.jsx';
 import { StatusBadge } from '../../components/domain.jsx';
 import { Icons } from '../../components/Icons.jsx';
@@ -11,6 +12,7 @@ import { RegisterDemandModal, OPEN_DEMAND } from './demandShared.jsx';
 
 export default function MyDemand() {
   const toast = useToast();
+  const dialog = useDialog();
   const state = useApi(() => api.get('/demand'), []);
   const [params, setParams] = useSearchParams();
   const [open, setOpen] = useState(params.get('new') === '1');
@@ -22,7 +24,11 @@ export default function MyDemand() {
   };
 
   const cancel = async (d) => {
-    if (!window.confirm(`Cancel your demand for ${kg(d.quantity, d.unit)} ${d.produceName}?`)) return;
+    if (!(await dialog.confirm({
+      title: `Cancel your ${d.produceName} request?`, tone: 'danger', icon: 'Demand',
+      message: `Farms will stop matching harvest to your request for ${kg(d.quantity, d.unit)} ${d.produceName}.`,
+      confirmLabel: 'Cancel request', cancelLabel: 'Keep request',
+    }))) return;
     setBusyId(d.id);
     try {
       await api.post(`/demand/${d.id}/cancel`);

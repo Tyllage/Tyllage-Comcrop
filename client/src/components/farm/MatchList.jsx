@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { api } from '../../services/api.js';
 import { useToast } from '../../context/ToastContext.jsx';
+import { useDialog } from '../../context/DialogContext.jsx';
 import { Badge, EmptyState } from '../ui.jsx';
 import { ScoreRing, StatusBadge } from '../domain.jsx';
 import { Icons } from '../Icons.jsx';
@@ -14,6 +15,7 @@ const URGENCY_TONE = { LOW: 'ok', MEDIUM: 'warn', HIGH: 'bad', CRITICAL: 'bad' }
 
 function MatchCard({ match, unit, canDecide, selected, onSelect, onDecided }) {
   const toast = useToast();
+  const dialog = useDialog();
   const [qty, setQty] = useState(match.recommendedQuantity);
   const [busy, setBusy] = useState(false);
   const [ai, setAi] = useState(null);
@@ -61,7 +63,11 @@ function MatchCard({ match, unit, canDecide, selected, onSelect, onDecided }) {
     }
   };
   const reject = async () => {
-    const reason = window.prompt(`Reject ${match.buyerName}? Optional reason:`);
+    const reason = await dialog.prompt({
+      title: `Reject ${match.buyerName}?`, icon: 'X',
+      message: 'This match will not be allocated. The buyer’s demand stays open for other harvests.',
+      inputLabel: 'Reason', placeholder: 'e.g. Reserved for premium buyers', confirmLabel: 'Reject match', cancelLabel: 'Keep match',
+    });
     if (reason === null) return;
     setBusy(true);
     try {
