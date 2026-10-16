@@ -148,6 +148,9 @@ table.table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
 .table tr.clickable { cursor: pointer; }
 .table .cell-title { font-weight: 600; }
 .table .cell-sub { font-size: 12px; color: var(--muted); }
+/* Row action buttons: one size, one line, evenly spaced. */
+.table-actions { display: flex; gap: 6px; align-items: center; flex-wrap: nowrap; }
+.table-actions .btn { min-width: 96px; }
 
 /* ---------------------------------------------------------------- badges */
 .badge {

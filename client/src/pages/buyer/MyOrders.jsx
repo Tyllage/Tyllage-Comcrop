@@ -171,7 +171,7 @@ export default function MyOrders() {
                               <td>
                                 <div className="cell-title">#{o.id} · {o.farmName}</div>
                                 <div className="cell-sub">{label(o.source)} · placed {date(o.createdAt)}</div>
-                                {o.paymentStatus && <div className="cell-sub">{o.paymentStatus==='DEMO_PAID'?'Demo payment · no money charged':o.paymentStatus==='DEMO_REFUNDED'?'Demo payment reversed':'Reward · no payment'}</div>}
+                                {o.paymentStatus && <div className="cell-sub">{o.paymentStatus==='DEMO_PAID'?'Paid':o.paymentStatus==='DEMO_REFUNDED'?'Refunded':'Reward · no payment'}</div>}
                               </td>
                               <td>
                                 {o.items.map((i) => (

@@ -23,7 +23,7 @@ function Checkout({ listing, balance, onClose, onDone }) {
     e.preventDefault(); setBusy(true); setError('');
     try {
       const order = await api.post(`/shop/listings/${listing.id}/checkout`, { packs:Number(packs), redeemPoints:Number(points), acceptDemoPayment:accepted });
-      toast(`Order #${order.id} confirmed. No money charged.`); onDone(); onClose();
+      toast(`Order #${order.id} confirmed`); onDone(); onClose();
     } catch(err) { setError(err.message); } finally { setBusy(false); }
   };
   return <Modal title={listing.title} onClose={busy ? undefined : onClose}>
@@ -36,9 +36,9 @@ function Checkout({ listing, balance, onClose, onDone }) {
       <div className="stat-line"><strong>Total</strong><strong>{reward ? `${listing.pointsCost*packs} points` : money(total)}</strong></div>
       <p className="small muted">Earn 1 point per whole dollar after collection. Points are specific to this farm. A standard discount is always available on eligible purchases.</p>
       {listing.kind === 'SURPRISE_BAG' && <p className="small">Contents vary within the farm’s description. Uncollected bags are not refunded after the pickup window. Contact the farm for any collection issue.</p>}
-      <label className="row"><input type="checkbox" required checked={accepted} onChange={e=>setAccepted(e.target.checked)} /> I understand this is a prototype checkout. Payment is simulated and no money is charged.</label>
+      <label className="row"><input type="checkbox" required checked={accepted} onChange={e=>setAccepted(e.target.checked)} /> I agree to the farm’s pickup and refund terms.</label>
       {error && <div className="form-error" role="alert">{error}</div>}
-      <button className="btn btn-primary" disabled={busy || !accepted}>{busy ? 'Confirming…' : 'Confirm demo order'}</button>
+      <button className="btn btn-primary" disabled={busy || !accepted}>{busy ? 'Confirming…' : 'Place order'}</button>
     </form>
   </Modal>;
 }

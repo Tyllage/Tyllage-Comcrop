@@ -50,8 +50,8 @@ export const ACCOUNTS = {
 /** Looks up seeded records by natural keys so tests don't depend on serial ids. */
 export async function ids() {
   const q = async (sql, params) => (await pool.query(sql, params)).rows[0];
-  const comcrop = await q(`SELECT id FROM farms WHERE slug = 'comcrop-pilot-demo'`);
-  const farmB = await q(`SELECT id FROM farms WHERE slug = 'farm-b-demo'`);
+  const comcrop = await q(`SELECT id FROM farms WHERE slug = 'comcrop-singapore'`);
+  const farmB = await q(`SELECT id FROM farms WHERE slug = 'farm-b'`);
   const batch = async (name) =>
     (await q(
       `SELECT hb.id FROM harvest_batches hb JOIN produce p ON p.id = hb.produce_id

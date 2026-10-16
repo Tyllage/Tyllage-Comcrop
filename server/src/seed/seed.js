@@ -94,7 +94,7 @@ export async function seed({ log = console.log } = {}) {
     // ---------------------------------------------------------------- farms
     const comcrop = await insert(client, 'farms', {
       name: 'ComCrop Singapore',
-      slug: 'comcrop-pilot-demo',
+      slug: 'comcrop-singapore',
       description: 'Urban farm in Singapore growing leafy greens and herbs for restaurants, retailers and neighbourhood households.',
       region: 'NORTH',
       address: 'Singapore',
@@ -111,7 +111,7 @@ export async function seed({ log = console.log } = {}) {
     });
     const farmB = await insert(client, 'farms', {
       name: 'Farm B',
-      slug: 'farm-b-demo',
+      slug: 'farm-b',
       description: 'Local farm growing leafy greens in western Singapore.',
       region: 'WEST',
       address: 'Singapore',

@@ -58,7 +58,7 @@ function OrdersTable({ farmId }) {
                 <tbody>
                   {rows.map((o) => (
                     <tr key={o.id}>
-                      <td className="cell-title">#{o.id}<div className="cell-sub">{dateTime(o.createdAt)}</div></td>
+                      <td className="cell-title">#{o.id}<div className="cell-sub nowrap">{dateTime(o.createdAt)}</div></td>
                       <td>{o.buyerName}<div className="cell-sub">{label(o.buyerType)}</div></td>
                       <td>{o.items.map((i) => <div key={i.id} className="nowrap">{kg(i.quantity, i.unit)} {i.produceName} <span className="muted">@ {money(i.unitPrice)}</span></div>)}</td>
                       <td className="num strong">{money(o.totalAmount)}</td>
@@ -66,10 +66,12 @@ function OrdersTable({ farmId }) {
                       <td>{label(o.collectionMethod)}{o.communityName && <div className="cell-sub">{o.communityName}</div>}</td>
                       <td className="nowrap">{date(o.scheduledDate)}</td>
                       <td><StatusBadge status={o.status} />{o.cancelledReason && <div className="cell-sub">{o.cancelledReason}</div>}</td>
-                      <td className="nowrap">
-                        {NEXT[o.status] && <button className="btn btn-sm" onClick={() => update(o, NEXT[o.status][0])}>{NEXT[o.status][1]}</button>}{' '}
-                        {isFarmAdmin && NEXT[o.status] && <button className="btn btn-sm btn-ghost" onClick={() => update(o, 'CANCELLED')}>Cancel</button>}{' '}
-                        {o.status !== 'PENDING' && <button className="btn btn-sm btn-ghost" onClick={() => setReporting(o)}>Report issue</button>}
+                      <td>
+                        <div className="table-actions">
+                          {NEXT[o.status] && <button className="btn btn-sm" onClick={() => update(o, NEXT[o.status][0])}>{NEXT[o.status][1]}</button>}
+                          {isFarmAdmin && NEXT[o.status] && <button className="btn btn-sm btn-danger" onClick={() => update(o, 'CANCELLED')}>Cancel</button>}
+                          {o.status !== 'PENDING' && <button className="btn btn-sm" onClick={() => setReporting(o)}>Report issue</button>}
+                        </div>
                       </td>
                     </tr>
                   ))}
