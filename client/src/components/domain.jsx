@@ -91,7 +91,3 @@ export function MetricValue({ metric, suffix = '%' }) {
     </span>
   );
 }
-
-export function DemoTag() {
-  return <Badge tone="medium">DEMO / PILOT DATA</Badge>;
-}

@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { api } from '../../services/api.js';
 import { useApi } from '../../hooks/useApi.js';
 import { PageHeader, Card, AsyncBoundary, EmptyState, FilterChips, Badge } from '../../components/ui.jsx';
-import { DemoTag } from '../../components/domain.jsx';
 import { Icons } from '../../components/Icons.jsx';
 import { label } from '../../utils/format.js';
 
@@ -40,7 +39,6 @@ export default function FarmDirectory() {
                         <h3><Link to={`/market/farms/${f.id}`}>{f.name}</Link></h3>
                         {f.region && <Badge tone="outline"><Icons.Pin width={12} /> {label(f.region)}</Badge>}
                       </div>
-                      {f.isDemo && <div><DemoTag /></div>}
                       <p className="small muted">{f.description || 'No description yet.'}</p>
                       {f.produce.length > 0 ? (
                         <div className="chip-row">

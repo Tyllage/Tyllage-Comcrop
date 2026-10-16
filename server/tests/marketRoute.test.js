@@ -157,7 +157,7 @@ describe('MarketRoute — API flow', () => {
     assert.equal(r.INSTITUTIONAL.coverableQuantity, 18);
     assert.equal(r.COMMUNITY_D2C.coverableQuantity, 11);
     // Caterer E's price is below the farm minimum; Wholesaler H cancelled on this batch.
-    assert.ok(r.INSTITUTIONAL.excluded.some((e) => e.buyerName === 'Caterer E (Demo)' && /below farm minimum/.test(e.reason)));
+    assert.ok(r.INSTITUTIONAL.excluded.some((e) => e.buyerName === 'Caterer E' && /below farm minimum/.test(e.reason)));
     assert.equal(r.WHOLESALE.status, 'NO_DEMAND');
     assert.ok(r.WHOLESALE.excluded.some((e) => /cancelled/.test(e.reason)));
     assert.ok(['RESTAURANT', 'INSTITUTIONAL', 'COMMUNITY_D2C'].includes(a.recommendedRoute));
@@ -182,7 +182,7 @@ describe('MarketRoute — API flow', () => {
     const { stage, matching } = res.body.data;
     assert.equal(stage, 'PRIMARY');
     const suggested = matching.matches.filter((m) => m.status === 'SUGGESTED');
-    assert.deepEqual(suggested.map((m) => m.buyerName), ['Restaurant A (Demo)']);
+    assert.deepEqual(suggested.map((m) => m.buyerName), ['Restaurant A']);
     assert.equal(suggested[0].marketRoute, 'RESTAURANT');
     assert.ok(suggested[0].fulfilment.method);
     assert.ok(suggested[0].netMargin.known);
@@ -202,7 +202,7 @@ describe('MarketRoute — API flow', () => {
     // A different route after the primary route has sold is an alternative route.
     const alt = await api().post(`/api/harvests/${I.kale}/routes/select`).set('Authorization', admin).send({ route: 'INSTITUTIONAL' });
     assert.equal(alt.body.data.stage, 'ALTERNATIVE');
-    assert.deepEqual(alt.body.data.matching.matches.filter((m) => m.status === 'SUGGESTED').map((m) => m.buyerName), ['Hotel B (Demo)']);
+    assert.deepEqual(alt.body.data.matching.matches.filter((m) => m.status === 'SUGGESTED').map((m) => m.buyerName), ['Hotel B']);
     const audit = await pool.query(`SELECT COUNT(*)::int AS n FROM audit_logs WHERE action = 'ROUTE_SELECTED' AND entity_id = $1`, [I.kale]);
     assert.equal(audit.rows[0].n, 2);
     const routes = (await api().get(`/api/harvests/${I.kale}/routes`).set('Authorization', admin)).body.data;

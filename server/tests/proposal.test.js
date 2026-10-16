@@ -98,14 +98,14 @@ describe('Proposal features — integration', () => {
     const r = await runMatch(I.naiBai, admin);
     const small = r.run.excluded.filter((e) => /below the farm minimum order/.test(e.reason));
     assert.equal(small.length, 3);
-    const caterer = r.matches.find((m) => m.buyerName === 'Caterer E (Demo)');
+    const caterer = r.matches.find((m) => m.buyerName === 'Caterer E');
     assert.equal(caterer.margin.known, true);
     assert.equal(caterer.margin.perUnit, 3);
   });
 
   it('enforces the buyer’s minimum delivery quantity on approval', async () => {
     const { byBuyer } = await runMatch(I.kale, admin);
-    const hotel = byBuyer['Hotel B (Demo)'];
+    const hotel = byBuyer['Hotel B'];
     const res = await api().post(`/api/matches/${hotel.id}/approve`).set('Authorization', admin).send({ quantity: 5 });
     assert.equal(res.status, 409);
     assert.equal(res.body.code, 'BELOW_BUYER_MINIMUM');
@@ -221,7 +221,7 @@ describe('Proposal features — integration', () => {
 
   it('Demand Recovery Time is measured once released stock is re-allocated', async () => {
     const { byBuyer } = await runMatch(I.kale, admin);
-    await api().post(`/api/matches/${byBuyer['Restaurant A (Demo)'].id}/approve`).set('Authorization', admin).send({}).expect(200);
+    await api().post(`/api/matches/${byBuyer['Restaurant A'].id}/approve`).set('Authorization', admin).send({}).expect(200);
     const a = (await api().get(`/api/analytics?farmId=${I.comcrop}`).set('Authorization', admin)).body.data;
     assert.equal(a.metrics.demandRecoveryTime.sufficient, true);
     assert.ok(a.metrics.demandRecoveryTime.value > 0);
@@ -272,7 +272,7 @@ describe('Proposal features — integration', () => {
     const resolved = await api().patch(`/api/disputes/${raised.body.data.id}`).set('Authorization', platform).send({ status: 'RESOLVED', resolution: 'Partial refund agreed with the farm' });
     assert.equal(resolved.body.data.status, 'RESOLVED');
     const mine = (await api().get('/api/disputes').set('Authorization', restaurant)).body.data;
-    assert.ok(mine.every((d) => d.buyerName === 'Restaurant A (Demo)'));
+    assert.ok(mine.every((d) => d.buyerName === 'Restaurant A'));
   });
 
   it('platform policies change business rules live and are validated', async () => {

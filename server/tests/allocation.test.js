@@ -15,7 +15,7 @@ describe('Allocations and orders', () => {
 
   it('approving a match creates order, order item and allocation, and updates stock', async () => {
     const { byBuyer } = await runMatch(I.kale, admin);
-    const m = byBuyer['Restaurant A (Demo)'];
+    const m = byBuyer['Restaurant A'];
     const res = await api().post(`/api/matches/${m.id}/approve`).set('Authorization', admin).send({});
     assert.equal(res.status, 200);
     assert.equal(res.body.data.match.status, 'APPROVED');
@@ -42,7 +42,7 @@ describe('Allocations and orders', () => {
 
   it('rejects over-allocation with an edited quantity', async () => {
     const { byBuyer } = await runMatch(I.kale, admin);
-    const m = byBuyer['Hotel B (Demo)'];
+    const m = byBuyer['Hotel B'];
     // Unallocated is 31kg; ask for more than remains on the batch.
     await pool.query('UPDATE demand_requests SET quantity = 100 WHERE id = $1', [m.demandRequestId]);
     const res = await api().post(`/api/matches/${m.id}/approve`).set('Authorization', admin).send({ quantity: 40 });
@@ -55,7 +55,7 @@ describe('Allocations and orders', () => {
 
   it('rejects an edited quantity larger than the buyer needs', async () => {
     const { byBuyer } = await runMatch(I.kale, admin);
-    const m = byBuyer['Community Buyer C (Demo)'];
+    const m = byBuyer['Community Buyer C'];
     const res = await api().post(`/api/matches/${m.id}/approve`).set('Authorization', admin).send({ quantity: 9 });
     assert.equal(res.status, 409);
     assert.equal(res.body.code, 'DEMAND_EXCEEDED');
@@ -63,8 +63,8 @@ describe('Allocations and orders', () => {
 
   it('concurrent approvals can never exceed available stock', async () => {
     const { byBuyer } = await runMatch(I.kale, admin); // 31kg unallocated
-    const hotel = byBuyer['Hotel B (Demo)'];
-    const community = byBuyer['Community Buyer C (Demo)'];
+    const hotel = byBuyer['Hotel B'];
+    const community = byBuyer['Community Buyer C'];
     await pool.query('UPDATE demand_requests SET quantity = 25 WHERE id = ANY($1::int[])', [[hotel.demandRequestId, community.demandRequestId]]);
     const results = await Promise.all([
       api().post(`/api/matches/${hotel.id}/approve`).set('Authorization', admin).send({ quantity: 20 }),

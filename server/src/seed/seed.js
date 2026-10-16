@@ -22,27 +22,27 @@ import { assertNonProductionReset } from '../db/safety.js';
 export const DEMO_PASSWORD = 'TyllageDemo2026!';
 
 export const DEMO_ACCOUNTS = [
-  { email: 'admin@tyllage.demo', role: 'platform_admin', fullName: 'Platform Admin (Demo)' },
-  { email: 'farmadmin@comcrop.demo', role: 'farm_admin', fullName: 'Farm Admin (Demo)', farm: 'comcrop', staffRole: 'ADMIN' },
-  { email: 'staff@comcrop.demo', role: 'farm_staff', fullName: 'Farm Staff (Demo)', farm: 'comcrop', staffRole: 'STAFF' },
-  { email: 'farmb@tyllage.demo', role: 'farm_admin', fullName: 'Farm B Admin (Demo)', farm: 'farmB', staffRole: 'ADMIN' },
-  { email: 'restaurant@tyllage.demo', role: 'business_buyer', fullName: 'Restaurant A Buyer (Demo)', buyer: 'restaurantA' },
-  { email: 'hotel@tyllage.demo', role: 'business_buyer', fullName: 'Hotel B Buyer (Demo)', buyer: 'hotelB' },
-  { email: 'consumer@tyllage.demo', role: 'consumer', fullName: 'Demo Consumer', buyer: 'consumer' },
+  { email: 'admin@tyllage.demo', role: 'platform_admin', fullName: 'Platform Admin' },
+  { email: 'farmadmin@comcrop.demo', role: 'farm_admin', fullName: 'Farm Admin', farm: 'comcrop', staffRole: 'ADMIN' },
+  { email: 'staff@comcrop.demo', role: 'farm_staff', fullName: 'Farm Staff', farm: 'comcrop', staffRole: 'STAFF' },
+  { email: 'farmb@tyllage.demo', role: 'farm_admin', fullName: 'Farm B Admin', farm: 'farmB', staffRole: 'ADMIN' },
+  { email: 'restaurant@tyllage.demo', role: 'business_buyer', fullName: 'Restaurant A Buyer', buyer: 'restaurantA' },
+  { email: 'hotel@tyllage.demo', role: 'business_buyer', fullName: 'Hotel B Buyer', buyer: 'hotelB' },
+  { email: 'consumer@tyllage.demo', role: 'consumer', fullName: 'Consumer', buyer: 'consumer' },
 ];
 
 // Fake 8-digit numbers in an unallocated range; WhatsApp runs in mock mode without credentials.
 const BUYERS = {
-  restaurantA: { name: 'Restaurant A (Demo)', type: 'RESTAURANT', region: 'CENTRAL', method: 'DELIVERY', phone: '80000001', optIn: true },
-  hotelB: { name: 'Hotel B (Demo)', type: 'HOTEL', region: 'EAST', method: 'FARM_PICKUP', phone: '80000002', optIn: true },
-  communityC: { name: 'Community Buyer C (Demo)', type: 'COMMUNITY', region: 'NORTH_EAST', method: 'COMMUNITY_DROP', phone: '80000003', optIn: true, managed: true },
-  cafeD: { name: 'Café D (Demo)', type: 'CAFE', region: 'CENTRAL', method: 'DELIVERY', phone: '80000004', optIn: true, managed: true },
-  catererE: { name: 'Caterer E (Demo)', type: 'CATERER', region: 'WEST', method: 'DELIVERY', phone: '80000005', optIn: false, managed: true },
-  retailerF: { name: 'Retailer F (Demo)', type: 'RETAILER', region: 'NORTH', method: 'FARM_PICKUP', phone: '80000006', optIn: true, managed: true },
-  consumerG: { name: 'Consumer G (Demo)', type: 'CONSUMER', region: 'EAST', method: 'FARM_PICKUP', phone: '80000007', optIn: true, managed: true },
-  wholesalerH: { name: 'Wholesaler H (Demo)', type: 'WHOLESALER', region: 'WEST', method: 'CENTRAL_DROP', phone: '80000008', optIn: false, managed: true },
-  wetMarketJ: { name: 'Wet Market Stall J (Demo)', type: 'WET_MARKET', region: 'NORTH', method: 'FARM_PICKUP', phone: '80000010', optIn: true, managed: true },
-  consumer: { name: 'Demo Consumer', type: 'CONSUMER', region: 'NORTH', method: 'COMMUNITY_DROP', phone: '80000009', optIn: true },
+  restaurantA: { name: 'Restaurant A', type: 'RESTAURANT', region: 'CENTRAL', method: 'DELIVERY', phone: '80000001', optIn: true },
+  hotelB: { name: 'Hotel B', type: 'HOTEL', region: 'EAST', method: 'FARM_PICKUP', phone: '80000002', optIn: true },
+  communityC: { name: 'Community Buyer C', type: 'COMMUNITY', region: 'NORTH_EAST', method: 'COMMUNITY_DROP', phone: '80000003', optIn: true, managed: true },
+  cafeD: { name: 'Café D', type: 'CAFE', region: 'CENTRAL', method: 'DELIVERY', phone: '80000004', optIn: true, managed: true },
+  catererE: { name: 'Caterer E', type: 'CATERER', region: 'WEST', method: 'DELIVERY', phone: '80000005', optIn: false, managed: true },
+  retailerF: { name: 'Retailer F', type: 'RETAILER', region: 'NORTH', method: 'FARM_PICKUP', phone: '80000006', optIn: true, managed: true },
+  consumerG: { name: 'Consumer G', type: 'CONSUMER', region: 'EAST', method: 'FARM_PICKUP', phone: '80000007', optIn: true, managed: true },
+  wholesalerH: { name: 'Wholesaler H', type: 'WHOLESALER', region: 'WEST', method: 'CENTRAL_DROP', phone: '80000008', optIn: false, managed: true },
+  wetMarketJ: { name: 'Wet Market Stall J', type: 'WET_MARKET', region: 'NORTH', method: 'FARM_PICKUP', phone: '80000010', optIn: true, managed: true },
+  consumer: { name: 'Consumer', type: 'CONSUMER', region: 'NORTH', method: 'COMMUNITY_DROP', phone: '80000009', optIn: true },
 };
 
 const TABLES = [
@@ -71,7 +71,7 @@ async function seedOrder(client, { farmId, buyerId, batch, quantity, unitPrice, 
     completed_at: status === 'COMPLETED' ? createdAt : null,
     cancelled_at: status === 'CANCELLED' ? createdAt : null,
     cancelled_by_party: cancelledBy,
-    cancelled_reason: status === 'CANCELLED' ? 'Demo: buyer menu change' : null,
+    cancelled_reason: status === 'CANCELLED' ? 'Buyer menu change' : null,
   });
   const item = await insert(client, 'order_items', {
     order_id: order.id, produce_id: batch.produce_id, harvest_batch_id: batch.id, demand_request_id: demandId,
@@ -93,11 +93,11 @@ export async function seed({ log = console.log } = {}) {
   await withTransaction(async (client) => {
     // ---------------------------------------------------------------- farms
     const comcrop = await insert(client, 'farms', {
-      name: 'ComCrop Singapore — Pilot Demo',
+      name: 'ComCrop Singapore',
       slug: 'comcrop-pilot-demo',
-      description: 'DEMO / PILOT DATA — fictional records for the ComCrop-first Tyllage pilot. Not actual ComCrop production, customers or revenue.',
+      description: 'Urban farm in Singapore growing leafy greens and herbs for restaurants, retailers and neighbourhood households.',
       region: 'NORTH',
-      address: 'Demo address (not a real location)',
+      address: 'Singapore',
       contact_email: 'farm@comcrop.demo',
       fulfilment_methods: ['FARM_PICKUP', 'CENTRAL_DROP', 'COMMUNITY_DROP', 'DELIVERY'],
       // DEMO ASSUMPTIONS for fulfilment cost estimates (S$), not ComCrop figures.
@@ -110,11 +110,11 @@ export async function seed({ log = console.log } = {}) {
       is_demo: true,
     });
     const farmB = await insert(client, 'farms', {
-      name: 'Farm B — Onboarding Demo',
+      name: 'Farm B',
       slug: 'farm-b-demo',
-      description: 'DEMO DATA — a second fictional farm showing multi-farm readiness.',
+      description: 'Local farm growing leafy greens in western Singapore.',
       region: 'WEST',
-      address: 'Demo address (not a real location)',
+      address: 'Singapore',
       fulfilment_methods: ['FARM_PICKUP'],
       is_demo: true,
     });
@@ -167,7 +167,7 @@ export async function seed({ log = console.log } = {}) {
 
     const batch = (produce, d) =>
       insert(client, 'harvest_batches', {
-        farm_id: produce.farm_id, produce_id: produce.id, grade: 'EVERYDAY', created_by: farmAdminId, notes: 'DEMO / PILOT DATA', ...d,
+        farm_id: produce.farm_id, produce_id: produce.id, grade: 'EVERYDAY', created_by: farmAdminId, notes: null, ...d,
       });
 
     // ---------------------------------------------------------------- historical (closed) batches → order history
@@ -218,15 +218,14 @@ export async function seed({ log = console.log } = {}) {
 
     // Community Drop with the demo consumer's lettuce order.
     const drop = await insert(client, 'community_drops', {
-      farm_id: comcrop.id, community_name: 'Yishun Neighbours (Demo)', collection_point: 'Demo collection point — Yishun',
+      farm_id: comcrop.id, community_name: 'Yishun Neighbours', collection_point: 'Yishun community centre',
       region: 'NORTH', drop_date: addDays(T, 7), window_start: '10:00', window_end: '11:30', created_by: farmAdminId,
-      notes: 'DEMO / PILOT DATA',
     });
     await seedOrder(client, { farmId: comcrop.id, buyerId: buyers.consumer.id, batch: lettuce, quantity: 2, unitPrice: 10, status: 'CONFIRMED', source: 'DIRECT', collection: 'COMMUNITY_DROP', dropId: drop.id, createdAt: recent, userId: farmAdminId, farmCosts: costs });
 
     // ---------------------------------------------------------------- open demand
     const demand = (key, d) =>
-      insert(client, 'demand_requests', { buyer_id: buyers[key].id, unit: 'kg', created_by: buyers[key].user_id ?? farmAdminId, notes: 'DEMO / PILOT DATA', ...d });
+      insert(client, 'demand_requests', { buyer_id: buyers[key].id, unit: 'kg', created_by: buyers[key].user_id ?? farmAdminId, notes: null, ...d });
     // Kale demand that HarvestMatch will rank.
     await demand('restaurantA', { farm_id: comcrop.id, produce_id: P.Kale.id, produce_name: 'Kale', category: 'LEAFY_GREENS', quantity: 15, required_date: addDays(T, 1), max_price: 13 });
     await demand('hotelB', { farm_id: comcrop.id, produce_id: P.Kale.id, produce_name: 'Kale', category: 'LEAFY_GREENS', quantity: 18, min_quantity: 10, required_date: addDays(T, 3), max_price: 12 });
@@ -261,7 +260,7 @@ export async function seed({ log = console.log } = {}) {
     // Dynamic Routing final stage on a past batch: surplus donated (counts towards Waste Avoided).
     await insert(client, 'batch_dispositions', {
       farm_id: comcrop.id, harvest_batch_id: hBasil.id, disposition_type: 'DONATION', quantity: 2,
-      recipient: 'Demo community food programme', notes: 'DEMO / PILOT DATA', created_by: farmAdminId, created_at: ts(addDays(hBasil.harvest_date, 5), 17),
+      recipient: 'Community food programme', notes: null, created_by: farmAdminId, created_at: ts(addDays(hBasil.harvest_date, 5), 17),
     });
 
     // An open order dispute for the platform admin to resolve.
@@ -271,18 +270,18 @@ export async function seed({ log = console.log } = {}) {
     )).rows[0];
     await insert(client, 'order_disputes', {
       order_id: disputed.id, farm_id: comcrop.id, raised_by: users['restaurant@tyllage.demo'].id, raised_by_party: 'BUYER', reason: 'QUANTITY',
-      description: 'Demo: delivery was about 0.5kg short of the ordered quantity.',
+      description: 'Delivery was about 0.5kg short of the ordered quantity.',
     });
 
     // ---------------------------------------------------------------- MarketRoute + HarvestMatch history on Sweet Basil
     await client.query('UPDATE harvest_batches SET primary_route = $1 WHERE id = $2', ['RESTAURANT', basil.id]);
     await insert(client, 'route_selections', {
       farm_id: comcrop.id, harvest_batch_id: basil.id, route: 'RESTAURANT', recommended_route: 'RESTAURANT', route_score: 88, stage: 'PRIMARY',
-      remaining_quantity: 30, assessment: JSON.stringify({ note: 'DEMO / PILOT DATA' }), created_by: farmAdminId, created_at: ts(addDays(T, -3), 8),
+      remaining_quantity: 30, assessment: JSON.stringify({}), created_by: farmAdminId, created_at: ts(addDays(T, -3), 8),
     });
     const run = await insert(client, 'match_runs', {
       farm_id: comcrop.id, harvest_batch_id: basil.id, run_type: 'HARVESTMATCH', remaining_quantity: 30, candidates_count: 4,
-      summary: JSON.stringify({ note: 'DEMO / PILOT DATA' }), created_by: farmAdminId, created_at: ts(addDays(T, -3), 8),
+      summary: JSON.stringify({}), created_by: farmAdminId, created_at: ts(addDays(T, -3), 8),
     });
     for (const { o, key, qty, price } of basilOrders) {
       const dr = await demand(key, {
@@ -305,14 +304,14 @@ export async function seed({ log = console.log } = {}) {
     await insert(client, 'harvest_matches', {
       farm_id: comcrop.id, run_id: run.id, harvest_batch_id: basil.id, demand_request_id: rejectedDemand.id, buyer_id: buyers.catererE.id,
       match_score: 66, reasons: JSON.stringify(['Exact produce match', 'Buyer price $22.00 meets farm minimum']),
-      recommended_quantity: 4, unit_price: 22, expected_revenue: 88, status: 'REJECTED', decision_note: 'Demo: reserved for premium buyers', market_route: 'INSTITUTIONAL',
+      recommended_quantity: 4, unit_price: 22, expected_revenue: 88, status: 'REJECTED', decision_note: 'Reserved for premium buyers', market_route: 'INSTITUTIONAL',
       decided_by: farmAdminId, decided_at: ts(addDays(T, -3), 9), created_at: ts(addDays(T, -3), 8),
     });
 
     // ---------------------------------------------------------------- Rescue listing (farm-confirmed suitable for sale)
     await insert(client, 'rescue_listings', {
       farm_id: comcrop.id, harvest_batch_id: basil.id, quantity: 2, original_price: 28, rescue_price: 18,
-      reason: 'COSMETIC_IMPERFECTION', reason_details: 'Demo: slightly bruised leaves, flavour unaffected',
+      reason: 'COSMETIC_IMPERFECTION', reason_details: 'Slightly bruised leaves, flavour unaffected',
       collection_deadline: ts(addDays(T, 3), 18), suitability_confirmed_by: farmAdminId, created_by: farmAdminId,
     });
 
@@ -320,7 +319,7 @@ export async function seed({ log = console.log } = {}) {
     const listing = (d) => insert(client, 'shop_listings', { farm_id: comcrop.id, approved_by: farmAdminId, ...d });
     // A collected past pre-order gives the demo consumer harvest-reward points (1 point per whole dollar).
     const pastPreorder = await listing({
-      harvest_batch_id: hKale.id, title: 'Kale harvest pack (Demo)', description: 'DEMO / PILOT DATA', kind: 'PREORDER',
+      harvest_batch_id: hKale.id, title: 'Kale harvest pack', description: 'About 1kg of freshly harvested kale.', kind: 'PREORDER',
       quantity_per_pack: 1, pack_price: 14, original_value: 14, max_packs: 10, pickup_date: hKale.harvest_date,
       pickup_start: '16:00', pickup_end: '18:00', is_active: false, created_at: ts(addDays(hKale.harvest_date, -4)),
     });
@@ -330,30 +329,30 @@ export async function seed({ log = console.log } = {}) {
     await insert(client, 'reward_ledger', { buyer_id: buyers.consumer.id, farm_id: comcrop.id, order_id: shopOrder.id, kind: 'EARN', points: 28, created_at: ts(hKale.harvest_date, 17) });
     // Current offers: a neighbourhood pre-order, a farm-pickup surprise bag and a points reward.
     await listing({
-      harvest_batch_id: lettuce.id, title: 'Next-week lettuce pre-order (Demo)', kind: 'PREORDER', quantity_per_pack: 1, pack_price: 13, original_value: 14,
+      harvest_batch_id: lettuce.id, title: 'Next-week lettuce pre-order', kind: 'PREORDER', quantity_per_pack: 1, pack_price: 13, original_value: 14,
       description: 'About 1kg (four heads) of butterhead lettuce from next week’s harvest, collected at the Yishun neighbourhood pickup.',
       max_packs: 15, pickup_date: drop.drop_date, pickup_start: drop.window_start, pickup_end: drop.window_end, community_drop_id: drop.id,
     });
     await listing({
-      harvest_batch_id: kale.id, title: 'Leafy greens surprise bag (Demo)', kind: 'SURPRISE_BAG', quantity_per_pack: 1, pack_price: 10, original_value: 14,
+      harvest_batch_id: kale.id, title: 'Leafy greens surprise bag', kind: 'SURPRISE_BAG', quantity_per_pack: 1, pack_price: 10, original_value: 14,
       description: 'About 1kg of today’s kale surplus, possibly with smaller or uneven leaves. Contents vary.',
       max_packs: 8, pickup_date: addDays(T, 1), pickup_start: '16:00', pickup_end: '18:00',
     });
     await listing({
-      harvest_batch_id: mint.id, title: 'Fresh mint bunch reward (Demo)', kind: 'REWARD', quantity_per_pack: 0.1, pack_price: 0, original_value: 2.6, points_cost: 25,
+      harvest_batch_id: mint.id, title: 'Fresh mint bunch reward', kind: 'REWARD', quantity_per_pack: 0.1, pack_price: 0, original_value: 2.6, points_cost: 25,
       description: 'A small bunch of mint for loyal customers, redeemable with harvest-reward points.',
       max_packs: 10, pickup_date: addDays(T, 6), pickup_start: '10:00', pickup_end: '12:00',
-      margin_override_reason: 'Demo: loyalty reward funded from harvest-reward points',
+      margin_override_reason: 'Loyalty reward funded from harvest-reward points',
     });
 
     // ---------------------------------------------------------------- Buyer Growth relationship notes
     await insert(client, 'buyer_relationships', {
       farm_id: comcrop.id, buyer_id: buyers.restaurantA.id, next_follow_up: addDays(T, 3),
-      notes: 'DEMO: Prefers kale and basil on Tuesdays. Ask about a standing weekly order before the next menu change.',
+      notes: 'Prefers kale and basil on Tuesdays. Ask about a standing weekly order before the next menu change.',
     });
     await insert(client, 'buyer_relationships', {
       farm_id: comcrop.id, buyer_id: buyers.catererE.id, next_follow_up: addDays(T, 1),
-      notes: 'DEMO: Price-sensitive; offer Nai Bai when there is surplus.',
+      notes: 'Price-sensitive; offer Nai Bai when there is surplus.',
     });
 
     // ---------------------------------------------------------------- a past campaign (mock mode)
@@ -370,7 +369,7 @@ export async function seed({ log = console.log } = {}) {
     for (const b of [kale, basil, naiBai, mint, lettuce, farmBLettuceBatch]) await syncBatchStatus(b.id, client);
   });
 
-  log('Seeded DEMO / PILOT DATA for "ComCrop Singapore — Pilot Demo"');
+  log('Seeded demo data for "ComCrop Singapore"');
   log(`Demo accounts (password: ${DEMO_PASSWORD}):`);
   for (const a of DEMO_ACCOUNTS) log(`  ${a.role.padEnd(15)} ${a.email}`);
 }

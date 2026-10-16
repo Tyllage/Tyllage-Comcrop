@@ -73,7 +73,7 @@ describe('Pilot approval and evidence API', () => {
     await resetDb();
     I = await ids();
     admin = await login(ACCOUNTS.farmAdmin);
-    match = (await runMatch(I.kale, admin)).byBuyer['Restaurant A (Demo)'];
+    match = (await runMatch(I.kale, admin)).byBuyer['Restaurant A'];
   });
 
   it('previews the actual edited quantity, then stores the buyer required date on approval', async () => {

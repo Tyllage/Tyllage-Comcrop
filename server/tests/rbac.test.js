@@ -80,7 +80,7 @@ describe('RBAC and farm access control', () => {
     const mine = await api().get('/api/orders').set('Authorization', restaurant);
     assert.equal(mine.status, 200);
     assert.ok(mine.body.data.length > 0);
-    assert.ok(mine.body.data.every((o) => o.buyerName === 'Restaurant A (Demo)'));
+    assert.ok(mine.body.data.every((o) => o.buyerName === 'Restaurant A'));
     const orderId = mine.body.data[0].id;
     assert.equal((await api().get(`/api/orders/${orderId}`).set('Authorization', hotel)).status, 403);
     const cancel = await api().patch(`/api/orders/${orderId}/status`).set('Authorization', hotel).send({ status: 'CANCELLED' });

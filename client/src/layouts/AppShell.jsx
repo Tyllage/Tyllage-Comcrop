@@ -112,7 +112,6 @@ export default function AppShell() {
   useEffect(() => setMenuOpen(false), [location.pathname]);
 
   const initials = user.fullName.split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase();
-  const showDemoBanner = isFarmSide ? farm?.isDemo : true;
 
   return (
     <div className="app">
@@ -177,11 +176,6 @@ export default function AppShell() {
             <Icons.Logout />
           </button>
         </header>
-        {showDemoBanner && (
-          <div className="demo-banner">
-            <strong>DEMO / PILOT DATA</strong> — fictional records for the ComCrop-first pilot. Not actual ComCrop production, customers, prices or revenue.
-          </div>
-        )}
         <main className="content">
           <Outlet />
         </main>

@@ -21,7 +21,7 @@ describe('Buyer demand', () => {
     assert.equal(res.body.data.produceName, 'Sweet Basil');
     assert.equal(res.body.data.farmId, I.comcrop);
     assert.equal(res.body.data.status, 'OPEN');
-    assert.equal(res.body.data.buyerName, 'Restaurant A (Demo)');
+    assert.equal(res.body.data.buyerName, 'Restaurant A');
   });
 
   it('consumer registers open-market interest by produce name', async () => {
@@ -53,16 +53,16 @@ describe('Buyer demand', () => {
     const hotel = await login(ACCOUNTS.hotel);
     const mine = await api().get('/api/demand').set('Authorization', hotel);
     assert.ok(mine.body.data.length > 0);
-    assert.ok(mine.body.data.every((d) => d.buyerName === 'Hotel B (Demo)'));
+    assert.ok(mine.body.data.every((d) => d.buyerName === 'Hotel B'));
   });
 
   it('farm admin records demand on behalf of a managed buyer', async () => {
     const admin = await login(ACCOUNTS.farmAdmin);
     const res = await api().post('/api/demand').set('Authorization', admin).send({
-      farmId: I.comcrop, buyerId: await I.buyer('Café D (Demo)'), produceId: await I.produce('Mint'), quantity: 2, requiredDate: addDays(todayISO(), 5),
+      farmId: I.comcrop, buyerId: await I.buyer('Café D'), produceId: await I.produce('Mint'), quantity: 2, requiredDate: addDays(todayISO(), 5),
     });
     assert.equal(res.status, 201);
-    assert.equal(res.body.data.buyerName, 'Café D (Demo)');
+    assert.equal(res.body.data.buyerName, 'Café D');
   });
 
   it('buyer can cancel their demand, but not someone else’s', async () => {

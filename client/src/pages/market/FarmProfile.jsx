@@ -4,7 +4,6 @@ import { api } from '../../services/api.js';
 import { useApi } from '../../hooks/useApi.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { PageHeader, Card, AsyncBoundary, EmptyState, Badge } from '../../components/ui.jsx';
-import { DemoTag } from '../../components/domain.jsx';
 import { Icons } from '../../components/Icons.jsx';
 import { kg, money, date, dateTime, relativeDay, label } from '../../utils/format.js';
 import { BuyModal, COLLECTION_METHODS, CONSUMER_COLLECTION } from '../buyer/demandShared.jsx';
@@ -35,7 +34,7 @@ export default function FarmProfile() {
           />
           <div className="stack">
             <div className="grid grid-main-side">
-              <Card title="About" actions={farm.isDemo && <DemoTag />}>
+              <Card title="About">
                 <div className="stack">
                   <p>{farm.description || 'This farm has not added a description yet.'}</p>
                   <div>

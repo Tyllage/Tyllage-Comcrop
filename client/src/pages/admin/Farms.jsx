@@ -4,7 +4,6 @@ import { useApi } from '../../hooks/useApi.js';
 import { useFarm } from '../../context/FarmContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { PageHeader, Card, AsyncBoundary, EmptyState, Modal, Field, Badge, Notice, fieldErrors } from '../../components/ui.jsx';
-import { DemoTag } from '../../components/domain.jsx';
 import { Icons } from '../../components/Icons.jsx';
 import { dateTime, label } from '../../utils/format.js';
 
@@ -110,7 +109,6 @@ export default function Farms() {
                           <td>
                             <div className="row">
                               {f.isActive ? <Badge tone="low">Active</Badge> : <Badge>Inactive</Badge>}
-                              {f.isDemo && <DemoTag />}
                             </div>
                           </td>
                           <td className="num">

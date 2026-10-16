@@ -29,7 +29,7 @@ describe('Demand Recovery — full demo story', () => {
 
   it('after approving the top three matches 5kg remains and recovery recommends Rescue', async () => {
     const { byBuyer } = await runMatch(I.kale, admin);
-    for (const name of ['Restaurant A (Demo)', 'Hotel B (Demo)', 'Community Buyer C (Demo)']) {
+    for (const name of ['Restaurant A', 'Hotel B', 'Community Buyer C']) {
       const r = await api().post(`/api/matches/${byBuyer[name].id}/approve`).set('Authorization', admin).send({});
       assert.equal(r.status, 200, JSON.stringify(r.body));
     }
@@ -48,22 +48,22 @@ describe('Demand Recovery — full demo story', () => {
     const { matches, run } = rec.body.data;
     const suggested = matches.filter((m) => m.status === 'SUGGESTED').map((m) => m.buyerName);
     // Fulfilled demand (approved buyers) is not re-offered.
-    for (const name of ['Restaurant A (Demo)', 'Hotel B (Demo)', 'Community Buyer C (Demo)']) assert.ok(!suggested.includes(name), name);
+    for (const name of ['Restaurant A', 'Hotel B', 'Community Buyer C']) assert.ok(!suggested.includes(name), name);
     // Buyer who cancelled on this batch is excluded with a reason.
-    assert.ok(run.excluded.some((e) => e.buyerName === 'Wholesaler H (Demo)' && /cancelled/.test(e.reason)));
+    assert.ok(run.excluded.some((e) => e.buyerName === 'Wholesaler H' && /cancelled/.test(e.reason)));
 
     // Reject Consumer G's weak suggestion, then cancel Caterer E's demand: neither may come back.
-    const consumerG = matches.find((m) => m.buyerName === 'Consumer G (Demo)' && m.status === 'SUGGESTED');
+    const consumerG = matches.find((m) => m.buyerName === 'Consumer G' && m.status === 'SUGGESTED');
     await api().post(`/api/matches/${consumerG.id}/reject`).set('Authorization', admin).send({ reason: 'Too far' }).expect(200);
     const caterer = (await api().get(`/api/demand?farmId=${I.comcrop}`).set('Authorization', admin)).body.data
-      .find((d) => d.buyerName === 'Caterer E (Demo)' && d.produceName === 'Kale');
+      .find((d) => d.buyerName === 'Caterer E' && d.produceName === 'Kale');
     await api().post(`/api/demand/${caterer.id}/cancel`).set('Authorization', admin).expect(200);
 
     const again = await api().post(`/api/recovery/harvests/${I.kale}/start`).set('Authorization', admin).send({});
     const ex = again.body.data.run.excluded;
-    assert.ok(ex.some((e) => e.buyerName === 'Consumer G (Demo)' && /Previously rejected/.test(e.reason)));
+    assert.ok(ex.some((e) => e.buyerName === 'Consumer G' && /Previously rejected/.test(e.reason)));
     assert.ok(!again.body.data.matches.some((m) => m.status === 'SUGGESTED'));
-    assert.ok(!ex.some((e) => e.buyerName === 'Caterer E (Demo)'), 'cancelled demand is not even considered');
+    assert.ok(!ex.some((e) => e.buyerName === 'Caterer E'), 'cancelled demand is not even considered');
   });
 
   it('suggestions never execute anything automatically', async () => {

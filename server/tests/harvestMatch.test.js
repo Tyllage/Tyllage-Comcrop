@@ -103,7 +103,7 @@ describe('HarvestMatch on the ComCrop demo Kale batch (integration)', () => {
     const r = await runMatch(I.kale, admin);
     assert.equal(r.batch.unallocatedQuantity, 46);
     const names = r.matches.map((m) => m.buyerName);
-    assert.deepEqual(names.slice(0, 3), ['Restaurant A (Demo)', 'Hotel B (Demo)', 'Community Buyer C (Demo)']);
+    assert.deepEqual(names.slice(0, 3), ['Restaurant A', 'Hotel B', 'Community Buyer C']);
     const scores = r.matches.map((m) => m.matchScore);
     assert.deepEqual([...scores].sort((a, b) => b - a), scores);
     for (const m of r.matches) {
@@ -115,8 +115,8 @@ describe('HarvestMatch on the ComCrop demo Kale batch (integration)', () => {
     assert.ok(total <= 46);
 
     const reasons = r.run.excluded.map((e) => `${e.buyerName}: ${e.reason}`);
-    assert.ok(reasons.some((x) => x.startsWith('Caterer E (Demo): Buyer max price')), reasons.join('; '));
-    assert.ok(reasons.some((x) => x === 'Wholesaler H (Demo): Buyer cancelled an order for this batch'), reasons.join('; '));
+    assert.ok(reasons.some((x) => x.startsWith('Caterer E: Buyer max price')), reasons.join('; '));
+    assert.ok(reasons.some((x) => x === 'Wholesaler H: Buyer cancelled an order for this batch'), reasons.join('; '));
   });
 
   it('re-running supersedes earlier unactioned suggestions', async () => {

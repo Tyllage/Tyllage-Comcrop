@@ -187,7 +187,6 @@ export default function Overview() {
                 </Card>
                 </div>
               </div>
-              {farm?.isDemo && <p className="small muted mt-16">All figures are calculated live from PostgreSQL records. Demo records are fictional.</p>}
             </>
           )}
         </AsyncBoundary>
