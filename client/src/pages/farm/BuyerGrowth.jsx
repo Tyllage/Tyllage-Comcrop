@@ -7,14 +7,35 @@ import { api } from '../../services/api.js';
 import { PageHeader, Card, AsyncBoundary, Field, Badge, EmptyState, Modal } from '../../components/ui.jsx';
 import { date, money, label } from '../../utils/format.js';
 
+/** One line in a relationship section: what it is on the left, the figure that matters on the right. */
+function RelItem({ title, meta, value, valueSub }) {
+  return <li className="rel-item"><div><div className="strong">{title}</div>{meta && <div className="cell-sub">{meta}</div>}</div><div className="rel-item-value"><div className="strong">{value}</div>{valueSub && <div className="cell-sub">{valueSub}</div>}</div></li>;
+}
+
+function RelList({ empty, children }) {
+  return children?.length ? <ul className="rel-list">{children}</ul> : <div className="rel-empty">{empty}</div>;
+}
+
 function Relationship({ buyer, farmId, onClose, onDone }) {
   const [notes,setNotes]=useState(buyer.notes);const [follow,setFollow]=useState(buyer.nextFollowUp||'');const [busy,setBusy]=useState(false);const [error,setError]=useState('');
   const save=async e=>{e.preventDefault();setBusy(true);try{await api.patch(`/farms/${farmId}/buyer-growth/${buyer.id}`,{notes,nextFollowUp:follow||null});onDone();onClose();}catch(e){setError(e.message);}finally{setBusy(false);}};
   return <Modal title={buyer.organisationName} onClose={onClose}><div className="stack"><p>{buyer.contactName} · {buyer.contactEmail || 'No email recorded'} · {buyer.contactPhone || 'No phone recorded'}</p>
-    <Card title="Purchase history">{buyer.history?.length?buyer.history.slice(0,10).map(o=><div className="stat-line" key={o.id}><span>#{o.id} · {date(o.date)} · {label(o.status)}</span><strong>{money(o.total)}</strong></div>):<p className="muted">No orders yet.</p>}</Card>
-    <Card title="Requirements and volume commitments">{buyer.requirements.length?buyer.requirements.map((d,i)=><div key={i} className="stat-line"><span>{d.produceName} · {d.quantity} · {label(d.recurrence)}</span><span>{date(d.requiredDate)}</span></div>):<p className="muted">No open requirements. Record a buyer-approved request in Demand.</p>}<Link to="/farm/demand" className="btn btn-sm mt-8">Manage demand</Link></Card>
+    <Card tight title="Purchase history">
+      <RelList empty="No orders yet.">{buyer.history?.slice(0,10).map(o=><RelItem key={o.id} title={`Order #${o.id}`} meta={`${date(o.date)} · ${label(o.status)}`} value={money(o.total)}/>)}</RelList>
+    </Card>
+    <Card tight title="Open requirements" description="Buyer-approved requests and volume commitments."
+      actions={<Link to="/farm/demand" className="btn btn-sm">Manage demand</Link>}>
+      <RelList empty={<>No open requirements yet. When this buyer confirms what they need, record it in <Link to="/farm/demand">Demand</Link>.</>}>
+        {buyer.requirements.map((d,i)=><RelItem key={i} title={d.produceName} meta={label(d.recurrence)} value={d.quantity} valueSub={`by ${date(d.requiredDate)}`}/>)}
+      </RelList>
+    </Card>
+    <Card tight title="Produce to offer" description="Current stock you could offer. Nothing is sent until you review it in Connect."
+      actions={<Link className="btn btn-sm btn-primary" to="/farm/campaigns">Draft an offer</Link>}>
+      <RelList empty="No unallocated stock right now. New harvests will show here.">
+        {buyer.availableOffers.map(o=><RelItem key={o.batchId} title={o.name} meta={`${o.available} available`} value={`${money(o.price)}/unit`}/>)}
+      </RelList>
+    </Card>
     <form className="form" onSubmit={save}><Field label="Relationship notes"><textarea aria-label="Relationship notes" className="input" rows={4} maxLength={3000} value={notes} onChange={e=>setNotes(e.target.value)}/></Field><Field label="Next follow-up"><input aria-label="Next follow-up" className="input" type="date" value={follow} onChange={e=>setFollow(e.target.value)}/></Field>{error&&<div className="form-error">{error}</div>}<button className="btn btn-primary" disabled={busy}>Save relationship</button></form>
-    <Card title="Available produce to discuss" description="Current stock for a farmer-reviewed offer. No message is sent automatically.">{buyer.availableOffers.map(o=><div key={o.batchId} className="stat-line"><span>{o.name} · {o.available} available</span><strong>{money(o.price)}/unit</strong></div>)}<Link className="btn btn-sm mt-16" to="/farm/campaigns">Draft an offer in Connect</Link></Card>
   </div></Modal>;
 }
 
