@@ -74,5 +74,5 @@ export default function Shop() {
   const { farmId } = useParams();
   const farms = useApi(()=>api.get('/marketplace/farms'),[]);
   if (farmId) return <FarmShop key={farmId} farmId={farmId} />;
-  return <><PageHeader title="Tyllage Shop" description="Buy the next harvest directly from local farms. Pre-order, collect nearby and earn harvest rewards." /><AsyncBoundary state={farms}>{items=><div className="shop-grid">{items.map(f=><Card key={f.id} title={f.name} description={f.region}><p>{f.description}</p><Link className="btn btn-primary mt-16" to={`/consumer/shop/${f.id}`}>Visit farm shop</Link></Card>)}{!items.length && <EmptyState title="No farm shops yet" />}</div>}</AsyncBoundary></>;
+  return <><PageHeader title="Tyllage Shop" description="Buy the next harvest directly from local farms. Pre-order, collect nearby and earn harvest rewards." /><AsyncBoundary state={farms}>{items=><div className="shop-grid">{items.map(f=><Card key={f.id} className="shop-farm-card" title={f.name} description={f.region}><p>{f.description}</p><Link className="btn btn-primary" to={`/consumer/shop/${f.id}`}>Visit farm shop</Link></Card>)}{!items.length && <EmptyState title="No farm shops yet" />}</div>}</AsyncBoundary></>;
 }

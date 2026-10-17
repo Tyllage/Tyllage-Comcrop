@@ -366,6 +366,10 @@ textarea.input { min-height: 90px; resize: vertical; line-height: 1.5; }
 .shop-rewards { border-left: 1px solid #55725e; padding-left: 28px; display: flex; flex-direction: column; min-width: 180px; font-size: 12px; }
 .shop-rewards strong { font-size: 48px; color: #d7eea9; }
 .shop-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 20px; margin-top: 20px; }
+/* Farm cards: text grows, the shop button stays pinned to the bottom so buttons line up across a row. */
+.shop-farm-card { display: flex; flex-direction: column; }
+.shop-farm-card .card-body { flex: 1; display: flex; flex-direction: column; align-items: flex-start; gap: 16px; }
+.shop-farm-card .card-body .btn { margin-top: auto; }
 .shop-product .card-body { height: 100%; display: flex; flex-direction: column; }
 .shop-product .btn { margin-top: auto; }
 .shop-product-art { display: grid; place-items: center; height: 110px; border-radius: 8px; margin-bottom: 18px; background: #ecf1dc; color: #4e7032; font-size: 72px; }
