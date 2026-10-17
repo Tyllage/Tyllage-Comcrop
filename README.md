@@ -13,7 +13,7 @@ Tyllage is a farm commercial-intelligence and coordination platform. It brings e
 Tyllage does not replace SAFEF initiatives, wholesalers, logistics providers, retailers or farm-management systems. It treats them as routes, fulfilment partners and data sources to compare.
 
 > **Industry-wide opportunity, ComCrop-first validation.**
-> All ComCrop data in this repository is **fictional DEMO / PILOT DATA**. It does not represent ComCrop's actual production, customers, prices, revenue, costs or commercial agreements.
+> All ComCrop data in this repository is **fictional pilot data**. It does not represent ComCrop's actual production, customers, prices, revenue, costs or commercial agreements. The portal no longer labels records as "Demo", so this notice is the disclaimer: say so whenever you show the pilot deployment to others.
 
 ### Problem
 
@@ -42,6 +42,10 @@ Record expected harvest → Capture demand → Demand coverage → Compare route
 | **Demand Recovery** | Re-runs route comparison and buyer matching against the remaining eligible channels, and shows the stage: **Primary route → Alternative route → Rescue route → Final disposition record**. |
 | **Tyllage Rescue** | An alternative route for produce the farm has itself judged suitable for sale. Tyllage does not determine food safety. |
 | **Tyllage Connect** | Approved outreach (OpenAI-assisted or template), which can target the buyers of one route. The backend controls inventory, prices, recipients and approvals. |
+| **Tyllage Shop** | Consumers pre-order farm-approved packs from upcoming harvests (pre-orders, surprise bags and reward items) and collect them in a set pickup window or at a Community Drop. Every listing passes Margin Guard, including packaging cost, and draws on the same allocation ledger as other orders. Payment is simulated. |
+| **Harvest rewards** | Consumers earn 1 point per dollar on completed Shop orders with a farm, and can redeem 100 points for $1 off or spend points on reward items. A discount can never take an order below the farm's approved margin. |
+| **Buyer Growth** | Farm-private view of each buyer's order history and reorder pattern, with relationship notes and follow-up dates. Buyers can reorder a past order at today's prices from **Orders → Buy again**. |
+| **Disputes** | Buyers and farms report an issue on an order; a platform admin records the decision and both parties are notified. |
 | **Tyllage Insights** | Which crops achieve stronger coverage, which routes preserve margin after fulfilment, which buyers reorder, and which routes recover surplus. Includes the pilot success framework. |
 | **WhatsApp** | Cloud API integration with a full mock mode. |
 
@@ -111,11 +115,11 @@ tyllage/
 │   ├── src/
 │   │   ├── config/             env.js, db.js, rules.js
 │   │   ├── controllers/        index.js
-│   │   ├── db/                 migrate.js, migrations/ (001 baseline, 002 proposal features, 003 MarketRoute)
+│   │   ├── db/                 migrate.js, migrations/ (001 baseline, 002 proposal features, 003 MarketRoute, 004 Shop and Buyer Growth, 005 demo-label clean-up)
 │   │   ├── middleware/         auth.js (verifyToken, requireRole, requireFarmAccess), errorHandler.js
 │   │   ├── models/             harvestModel.js
 │   │   ├── routes/             one router per API group
-│   │   ├── seed/seed.js        ComCrop pilot DEMO data
+│   │   ├── seed/seed.js        ComCrop pilot data (fictional)
 │   │   ├── services/           business logic (see above)
 │   │   ├── utils/
 │   │   ├── app.js              Express app factory
@@ -180,6 +184,14 @@ Then edit `server/.env`:
 | `CLIENT_URL` | – | CORS allow-list (comma-separated). Not needed when Express serves the client |
 | `APP_TIMEZONE` | – | Default `Asia/Singapore`; business dates are Singapore calendar days |
 
+Client build-time variables go in `client/.env` (see `client/.env.example`). They are baked into the build, so redeploy after changing them:
+
+| Variable | Notes |
+|---|---|
+| `VITE_API_URL` | Only when the API is on another host; the default is same-origin `/api` |
+| `VITE_SHOW_DEMO_ACCOUNTS` | `true` shows the demo-account picker on the login page |
+| `VITE_WHATSAPP_NUMBER` | Digits in international format; shows the WhatsApp chat button on the public website. Leave empty to hide it |
+
 Never commit `.env` files. They are git-ignored.
 
 ### 4. Migrate and seed the pilot demo
@@ -227,7 +239,7 @@ All demo accounts share the password **`TyllageDemo2026!`** (defined in `server/
 | platform_admin | `admin@tyllage.demo` | Manage farms and users, switch between farms |
 | farm_admin (Farm B) | `farmb@tyllage.demo` | Verify multi-farm isolation |
 | business_buyer | `restaurant@tyllage.demo`, `hotel@tyllage.demo` | Register demand, see matches and orders |
-| consumer | `consumer@tyllage.demo` | Browse and reserve Rescue produce, join Community Drops |
+| consumer | `consumer@tyllage.demo` | Shop farm packs, earn and redeem rewards, reserve Rescue produce, join Community Drops |
 
 In development builds the login page also shows a one-click demo-account picker.
 
@@ -241,7 +253,9 @@ In development builds the login page also shows a one-click demo-account picker.
 4. Choose **Review & approve**. Review revenue, fulfilment cost and net contribution for the entered quantity. Below-target margins require a reason and acknowledgement, saved in the audit log. The order records its fulfilment terms, estimated fulfilment cost and effective buyer required date.
 5. Click **Recover demand**. The ladder moves to **Alternative route**: Restaurants & cafés and Community & D2C can absorb the rest, with Rescue for the final kilograms.
 6. Create the Rescue listing (the farm must tick the suitability-for-sale confirmation) and **Generate Rescue campaign** in Tyllage Connect. Sending is a separate, explicit step; in mock mode messages appear in **Connect → WhatsApp message log**.
-7. **Insights** shows route performance (net margin after fulfilment, cancellation rate, recovered kg), coverage by crop, buyer reorders and the seven pilot KPIs against baselines the farm records.
+7. Sign in as **consumer@tyllage.demo** and open **Tyllage Shop**. Pick a farm, choose a pickup offer and check out (payment is simulated). Points are added when the farm marks the order completed.
+8. As **restaurant@tyllage.demo**, open **Orders**: report an issue on a completed order, or **Buy again** to reorder at today's prices. Then sign in as **admin@tyllage.demo** and resolve the issue in **Platform → Disputes**.
+9. **Insights** shows route performance (net margin after fulfilment, cancellation rate, recovered kg), coverage by crop, buyer reorders and the seven pilot KPIs against baselines the farm records.
 
 ## Business rules (transparent, configurable in `server/src/config/rules.js` and live in Admin → Policies)
 
@@ -304,7 +318,7 @@ All responses use `{ "success": true, "data": … }` or `{ "success": false, "me
 | `/api/harvests` | `GET ?farmId` · `POST` · `GET/PATCH /:id` (incl. `allowedRoutes`) · `POST /:id/mark-available` · `POST /:id/close` · **`GET /:id/routes`** (MarketRoute) · **`POST /:id/routes/select`** `{ route }` · **`POST /:id/run-matching`** `{ route? }` · **`GET /:id/matches`** |
 | `/api/demand` | `GET` (farm: `?farmId`; buyer: own) · `POST` · `GET/PATCH /:id` · `POST /:id/cancel` |
 | `/api/matches` | `GET` · `POST /:id/preview` `{ quantity? }` · `POST /:id/approve` `{ quantity?, quoteToken?, marginOverrideReason?, note? }` · `POST /:id/reject` `{ reason? }` |
-| `/api/orders` | `GET` · `GET /:id` · `PATCH /:id/status` `{ status, reason? }` |
+| `/api/orders` | `GET` · `GET /:id` · `PATCH /:id/status` `{ status, reason? }` · `GET/POST /:id/reorder` (buyers: quote, then reorder at current prices) |
 | `/api/recovery` | `GET ?farmId` (candidates and triggers) · `POST /harvests/:id/start` · `GET /harvests/:id` |
 | `/api/rescue` | `GET /public` · `GET ?farmId` · `POST` · `PATCH /:id` · `POST /:id/cancel` · `POST /:id/reserve` |
 | `/api/campaigns` | `GET ?farmId` · `POST /generate` (optional `targetRoute`) · `GET/PATCH /:id` · `POST /:id/approve` · `POST /:id/send` · `POST /:id/cancel` |
@@ -321,6 +335,8 @@ All responses use `{ "success": true, "data": … }` or `{ "success": false, "me
 | `/api/ai` | `GET /status` · `POST /matches/:id/explain` · `POST /insights` · plus `POST /api/campaigns/:id/variations`, `GET /api/rescue/price-suggestion` |
 | `/api/admin` | `GET/PATCH /policies` · `GET /audit-logs` (platform admin) |
 | `/api/marketplace/farms/:id` | Public farm profile |
+| `/api/shop` | `GET /farms/:farmId` (public; active listings only) · `GET /manage?farmId` · `GET /insights?farmId` · `POST /listings` · `POST /listings/:id/close` (farm admin) · `POST /listings/:id/checkout` `{ packs, redeemPoints? }` · `GET /rewards/:farmId` (consumer) |
+| `/api/farms/:farmId/buyer-growth` | `GET` · `PATCH /:buyerId` `{ notes, nextFollowUp }` (farm admin; farm-private) |
 | misc | `GET /api/health` · `GET /api/features` · `GET/PATCH /api/buyers/me` · `GET /api/notifications` · `POST /api/notifications/:id/read` · `GET/POST /api/whatsapp/webhook` |
 
 ### Roles
@@ -328,10 +344,10 @@ All responses use `{ "success": true, "data": … }` or `{ "success": false, "me
 | Role | Can |
 |---|---|
 | `platform_admin` | Everything, on every farm; manage farms and users |
-| `farm_admin` | Manage farm and produce, harvests, demand, run HarvestMatch, approve/reject, cancel orders, recovery, Rescue, campaigns, analytics |
+| `farm_admin` | Manage farm and produce, harvests, demand, run HarvestMatch, approve/reject, cancel orders, recovery, Rescue, Shop listings, Buyer Growth notes, campaigns, analytics |
 | `farm_staff` | Create and update harvests (not prices), fulfil orders (confirm, ready, complete), view farm data. No approvals, cancellations, pricing or campaigns |
-| `business_buyer` | Register demand, view supply, matches and own orders, cancel own pending/confirmed orders |
-| `consumer` | Browse supply and Rescue, register interests, reserve Rescue, join Community Drops, own orders |
+| `business_buyer` | Register demand, view supply, matches and own orders, cancel own pending/confirmed orders, reorder, report an issue |
+| `consumer` | Browse supply and Rescue, buy from Tyllage Shop, earn and redeem farm rewards, register interests, reserve Rescue, join Community Drops, own orders |
 
 ## Proposal v3 coverage
 
@@ -374,9 +390,11 @@ The catalog lives in `client/src/utils/httpStatus.js` and the page in `client/sr
 - `verifyToken`, `requireRole` and `requireFarmAccess` on every protected route. A client-supplied `farmId` is always checked against the user's farm memberships. Resource routes (`/:id`) load the record and check its `farm_id` server-side.
 - Parameterised SQL only. zod validation on every write. Database constraints back up the business rules (e.g. `min_price ≤ preferred_price`, `rescue_price ≤ original_price`, positive quantities).
 - helmet, CORS allow-list, global plus stricter auth rate limits, a 100kb JSON body limit, and sanitised production errors.
-- An audit log covers farm-sensitive actions (`HARVEST_CREATED`, `MATCH_APPROVED`, `ORDER_CANCELLED`, `RECOVERY_STARTED`, `RESCUE_CREATED`, `CAMPAIGN_APPROVED`, …), written inside the same transaction as the action.
+- An audit log covers farm-sensitive actions (`HARVEST_CREATED`, `MATCH_APPROVED`, `ORDER_CANCELLED`, `RECOVERY_STARTED`, `RESCUE_CREATED`, `CAMPAIGN_APPROVED`, `SHOP_LISTING_APPROVED`, `SHOP_CHECKOUT`, `BUYER_RELATIONSHIP_UPDATED`, …), written inside the same transaction as the action.
+- The public Shop endpoint selects explicit columns and never returns production cost, minimum price, packaging cost or margin. Reward balances are locked (`SELECT … FOR UPDATE`) during checkout so points cannot be spent twice.
+- WhatsApp webhook verification only echoes plain challenge tokens (letters, digits, `-` and `_`, up to 128 characters), so it cannot reflect HTML.
 - AI guard-rails: OpenAI only receives backend-built context and only returns copy. Generated text is scanned for prices that are not in the approved context, and these are flagged to the reviewer.
-- Known MVP trade-offs: the JWT is stored in `localStorage` (move to httpOnly cookies before handling payments), and the WhatsApp webhook POST does not yet verify `X-Hub-Signature-256` (add this before processing inbound messages).
+- Known MVP trade-offs: the JWT is stored in `localStorage` (move to httpOnly cookies before handling payments), Shop payment is simulated (no card details are collected or stored), and the WhatsApp webhook POST does not yet verify `X-Hub-Signature-256` (add this before processing inbound messages). See [AUDIT.md](AUDIT.md) for all open findings.
 
 ## Tests
 
@@ -404,6 +422,8 @@ This requires `TEST_DATABASE_URL`, a **disposable** database that is dropped and
 - HTTP 400/413/415 handling
 - MarketRoute: route scores and plans, fulfilment cost, margin after fulfilment, commercial constraints, route-scoped HarvestMatch, primary/alternative route decisions, recovery stages, route-targeted outreach, Insights by route, and the v3 pilot KPIs
 - the Phase 3 preview gate for FarmPool / DemandPool
+- Tyllage Shop: listing approval and Margin Guard, checkout limits, and earning, redeeming and restoring rewards
+- WhatsApp webhook verification rejecting challenges that are not plain tokens
 - proposal features: shelf-life urgency stages, Margin Guard, minimum order quantities, DemandPool, FarmPool (with partner anonymity), bulk orders, dispositions, the new KPIs, baselines, disputes, platform policies and the AI simulation
 
 ## Railway deployment
@@ -429,7 +449,7 @@ The frontend never assumes localhost. It calls same-origin `/api`, or `VITE_API_
 
 ## Current MVP scope (proposal v3 Phase 1, ComCrop MVP)
 
-**Built:** auth + RBAC, Demand Radar, harvests and commercial constraints, buyer demand, demand coverage, MarketRoute, HarvestMatch, Margin Guard with fulfilment cost, allocations and orders, Demand Recovery stages, Tyllage Rescue, Tyllage Connect (OpenAI/mock, WhatsApp mock/live), Insights and the pilot success framework, buyer and consumer portals, platform admin.
+**Built:** auth + RBAC, Demand Radar, harvests and commercial constraints, buyer demand, demand coverage, MarketRoute, HarvestMatch, Margin Guard with fulfilment cost, allocations and orders, Demand Recovery stages, Tyllage Rescue, Tyllage Shop with harvest rewards (simulated payment), Buyer Growth and reorders, disputes, Tyllage Connect (OpenAI/mock, WhatsApp mock/live), Insights and the pilot success framework, buyer and consumer portals, platform admin, public website.
 
 **Phase 3 preview (off by default):** FarmPool, DemandPool.
 

@@ -2,9 +2,9 @@
 
 | | |
 |---|---|
-| **Audit date** | 6 October 2026 |
+| **Audit date** | 17 October 2026 (previous: 6 October 2026) |
 | **Scope** | `server/` (Node.js + Express API), `client/` (React + Vite SPA), database migrations, deployment configuration |
-| **Commit** | `main` after the proposal v3 changes (MarketRoute, public website) |
+| **Commit** | `main` after Tyllage Shop, harvest rewards, Buyer Growth and the WhatsApp webhook fix |
 | **Method** | Dependency audit (`npm audit`), manual code review of authentication, access control, data exposure and input handling, and the automated test suite |
 
 This is an internal audit of the pilot MVP. It is not a third-party penetration test.
@@ -13,12 +13,12 @@ This is an internal audit of the pilot MVP. It is not a third-party penetration 
 
 | Area | Result |
 |---|---|
-| Dependency vulnerabilities (server, 129 packages) | **0** known (critical 0 · high 0 · moderate 0 · low 0) |
+| Dependency vulnerabilities (server, 126 packages) | **0** known (critical 0 · high 0 · moderate 0 · low 0) |
 | Dependency vulnerabilities (client, 48 packages) | **0** known |
-| Automated tests | **118 / 118 passing**, including RBAC, farm isolation and over-allocation tests |
+| Automated tests | **149 tests** in 16 suites, including RBAC, farm isolation, over-allocation, Shop and webhook tests. Run them with `npm test` against a disposable database and record the result here; GitHub Actions runs them on every push to `main` |
 | SQL injection | No user input is interpolated into SQL |
 | Secrets in the repository | None found; `.env` files are git-ignored |
-| Open findings | 1 high (demo accounts on a public deployment), 2 medium, 3 low. See [Findings](#findings) |
+| Open findings | 1 high (demo accounts on a public deployment), 2 medium, 5 low. 1 fixed since the last audit (reflected XSS in the WhatsApp webhook). See [Findings](#findings) |
 
 ## Controls verified
 
@@ -51,14 +51,16 @@ This is an internal audit of the pilot MVP. It is not a third-party penetration 
 - **Farm-private fields never reach buyers or the public:**
   - minimum price, production cost, margin and fulfilment cost estimates;
   - public and buyer views use dedicated DTOs (`toPublicBatchDTO`, `toBuyerOrder`).
-- Public marketplace queries select explicit columns, never `SELECT *`.
+- Public marketplace and Shop queries select explicit columns, never `SELECT *`. The public Shop listing never returns production cost, minimum price, packaging cost or the margin approval reason.
+- Buyer Growth relationship notes are farm-private: only that farm's admins can read or change them, and only for buyers who have dealt with that farm.
 - FarmPool partner farms are anonymised to other farms.
 - Production error responses are sanitised; stack traces are not returned.
 
 ### Input handling
 
 - All write endpoints validate input with **zod**.
-- Database `CHECK` constraints back up the business rules, for example `min_price ≤ preferred_price` and positive quantities.
+- Database `CHECK` constraints back up the business rules, for example `min_price ≤ preferred_price`, positive quantities and non-negative reward balances.
+- The WhatsApp webhook verification only echoes a challenge made of letters, digits, `-` and `_` (up to 128 characters) and replies as `text/plain` with `nosniff`. Tests cover rejected challenges.
 - **Parameterised SQL only.** Dynamic `WHERE` and `SET` clauses only append numbered placeholders, and column names come from fixed allow-lists.
 - JSON bodies are limited to **100 kB** (413 above that). Non-JSON write requests are rejected (415).
 - The React client never uses `dangerouslySetInnerHTML` or `innerHTML`. All user content is escaped.
@@ -74,8 +76,10 @@ This is an internal audit of the pilot MVP. It is not a third-party penetration 
 
 - Stock is never stored as a counter. It is derived from allocations inside transactions that lock the batch row (`SELECT … FOR UPDATE`).
 - A test proves that concurrent approvals cannot over-allocate.
+- Shop checkout locks the listing and the buyer's reward account (`SELECT … FOR UPDATE`), re-checks remaining packs, and applies Margin Guard again, so a reward discount cannot take an order below the farm's approved margin and points cannot be spent twice. Each order earns, redeems or restores points at most once (`UNIQUE(order_id, kind)`).
 - Farm-sensitive actions are written to an **audit log** in the same transaction as the action, for example:
   - `MATCH_APPROVED`, `ROUTE_SELECTED`, `ORDER_CANCELLED`;
+  - `SHOP_LISTING_APPROVED`, `SHOP_CHECKOUT`, `ORDER_REORDERED`, `BUYER_RELATIONSHIP_UPDATED`;
   - `POLICY_UPDATED`;
   - sign-ins.
 
@@ -96,6 +100,9 @@ This is an internal audit of the pilot MVP. It is not a third-party penetration 
 | A-4 | Low | **No multi-factor authentication or account lockout.** Brute force is slowed only by the per-IP auth rate limit. The password minimum is 8 characters. | Add MFA for `platform_admin` and `farm_admin`, and per-account lockout or backoff. | Open |
 | A-5 | Low | **Rate limits are kept in memory**, per instance. They reset on restart and are not shared if the service is scaled out. | Use a shared store (for example Redis) before running more than one replica. | Open |
 | A-6 | Low | **Request logs include client IP addresses** (morgan `combined` format in production). | Document log retention in the privacy notice, or drop IPs from logs if not needed. | Open |
+| A-7 | Low | **Fictional data is no longer labelled in the portal.** The seeded pilot data now uses real-looking names ("ComCrop Singapore", "Restaurant A") without "Demo" labels. Visitors to a public deployment could mistake it for ComCrop's real production, prices or customers. | Keep the README disclaimer, and add a short "fictional pilot data" note to the login page or footer while the deployment runs on seed data. | Open |
+| A-8 | Low | **Shop payment is simulated.** Paid Shop orders are recorded as `DEMO_PAID` without collecting money. No card or bank details are collected or stored. | Integrate a PCI-compliant payment provider (hosted checkout, so card data never reaches Tyllage) and move the JWT to an `httpOnly` cookie (A-2) before taking real payments. | Open: by design for the pilot |
+| A-9 | Medium | **Reflected XSS in WhatsApp webhook verification.** `GET /api/whatsapp/webhook` echoed `hub.challenge` unchanged once the verify token matched. | Only accept plain challenge tokens and reply as `text/plain` with `nosniff`. | **Fixed** 16 October 2026 (commit `430a14b`), with tests |
 
 ### Informational
 

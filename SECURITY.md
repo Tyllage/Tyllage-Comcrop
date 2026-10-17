@@ -40,7 +40,8 @@ In scope:
 - authentication, role-based access and farm data isolation, for example:
   - a farm reading another farm's records;
   - a buyer seeing farm-private prices, costs or margins;
-  - privilege escalation between roles.
+  - privilege escalation between roles;
+  - reward points being spent twice, or a Shop discount taking an order below the farm's approved margin.
 
 Out of scope:
 
@@ -48,7 +49,8 @@ Out of scope:
 - findings that need a compromised device, browser extension or physical access;
 - denial of service through traffic volume;
 - missing best-practice headers without a demonstrated impact;
-- third-party services (Railway, OpenAI, WhatsApp Cloud API). Report those to the provider.
+- third-party services (Railway, OpenAI, WhatsApp Cloud API). Report those to the provider;
+- Shop payments, which are simulated in the pilot. No real money or card details are handled.
 
 ## Safe harbour
 
