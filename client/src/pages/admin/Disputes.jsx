@@ -92,11 +92,12 @@ export default function Disputes() {
                       <tr>
                         <th>Raised</th>
                         <th>Order</th>
+                        <th>Order status</th>
                         <th>Farm</th>
                         <th>Buyer</th>
                         <th>Raised by</th>
                         <th>Issue</th>
-                        <th>Status</th>
+                        <th>Issue status</th>
                         <th>Resolution</th>
                         <th />
                       </tr>
@@ -108,8 +109,8 @@ export default function Disputes() {
                           <td>
                             <div className="cell-title">#{d.orderId}</div>
                             <div className="cell-sub">{money(d.totalAmount)}</div>
-                            {d.orderStatus && <StatusBadge status={d.orderStatus} />}
                           </td>
+                          <td>{d.orderStatus ? <StatusBadge status={d.orderStatus} /> : <span className="muted">—</span>}</td>
                           <td>{d.farmName}</td>
                           <td>{d.buyerName}</td>
                           <td>
