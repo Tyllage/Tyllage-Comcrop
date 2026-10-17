@@ -4,7 +4,7 @@ import { api } from '../../services/api.js';
 import { useApi } from '../../hooks/useApi.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
-import { PageHeader, Card, AsyncBoundary, EmptyState, FilterChips, Modal, Field, Badge, Notice } from '../../components/ui.jsx';
+import { PageHeader, Card, AsyncBoundary, EmptyState, FilterChips, Modal, Field, Notice } from '../../components/ui.jsx';
 import { StatusBadge } from '../../components/domain.jsx';
 import { Icons } from '../../components/Icons.jsx';
 import { kg, money, date, label } from '../../utils/format.js';
@@ -186,9 +186,12 @@ export default function MyOrders() {
                                 <StatusBadge status={o.status} />
                                 {o.cancelledReason && <div className="cell-sub mt-8">{o.cancelledReason}</div>}
                                 {dispute && (
-                                  <div className="mt-8">
-                                    <Badge tone={DISPUTE_TONE[dispute.status]}>Issue {dispute.status.toLowerCase()}</Badge>
-                                    <div className="cell-sub">Reason: {label(dispute.reason)}{dispute.resolution ? ` — ${dispute.resolution}` : ''}</div>
+                                  <div className={`issue-note tone-${DISPUTE_TONE[dispute.status] || 'neutral'}`}>
+                                    <Icons.Alert />
+                                    <div>
+                                      <div className="issue-note-title">Issue {dispute.status.toLowerCase()}</div>
+                                      <div className="issue-note-text">{label(dispute.reason)}{dispute.resolution ? ` — ${dispute.resolution}` : ''}</div>
+                                    </div>
                                   </div>
                                 )}
                               </td>
