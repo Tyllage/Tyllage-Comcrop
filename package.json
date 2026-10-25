@@ -2,7 +2,7 @@
   "name": "tyllage",
   "version": "0.1.0",
   "private": true,
-  "license": "MIT",
+  "license": "UNLICENSED",
   "description": "Tyllage — From Harvest to Demand. Local farm demand, market-access and harvest-matching platform.",
   "engines": {
     "node": ">=22.9.0"

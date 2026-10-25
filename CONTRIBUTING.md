@@ -1,13 +1,22 @@
 # Contributing to Tyllage
 
-Thanks for helping build Tyllage: a commercial-intelligence platform that helps local farms decide where upcoming harvest should go.
+> **Tyllage does not accept outside contributions.**
+> This repository is proprietary and is maintained only by the Tyllage team. Pull requests, patches and feature work from anyone outside the team will be closed without review. Forking or copying this repository does not give you any right to use, run, modify or redistribute the code. See [LICENSE](LICENSE).
+
+If you are not a member of the Tyllage team:
+
+- **Found a security problem?** Report it privately as described in [SECURITY.md](SECURITY.md). Do not open a public issue.
+- **Interested in licensing, a pilot or a partnership?** Contact the team through the [Tyllage GitHub organisation](https://github.com/Tyllage).
+
+The rest of this guide is for **Tyllage team members** only.
 
 ## Before you start
 
 - Read the [README](README.md) for the product, architecture and local setup.
 - For anything larger than a small fix, **open an issue first** so the approach can be agreed before you write code.
 - Security problems must **not** go in public issues. Follow [SECURITY.md](SECURITY.md).
-- By contributing you agree that your work is released under the [MIT License](LICENSE). You also agree to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
+- All work you do on this repository belongs to Tyllage LLP and is covered by the [Tyllage Proprietary License](LICENSE). You also agree to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
+- Do not copy Tyllage code into personal projects, other repositories or public places (gists, forums, AI chat tools that keep your data) without approval.
 
 ## Local setup (short version)
 

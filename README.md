@@ -4,6 +4,9 @@
 
 *Demand & Market Access Platform for Local Farms — Commercial Intelligence · Market Coordination · Demand Recovery*
 
+> **Proprietary software. © 2026 Tyllage LLP. All rights reserved.**
+> This repository is not open source. Being able to see it on GitHub does not give you permission to copy, use, run, modify, deploy or redistribute any part of it. Outside contributions are not accepted. See [LICENSE](LICENSE).
+
 ## Overview
 
 The October 2026 proposal-pack review and implementation map are in [Proposal alignment and pilot plan](docs/PROPOSAL_ALIGNMENT.md). See [Pilot release workflow](docs/PILOT_RELEASE.md) for validation and rollout.
@@ -479,10 +482,18 @@ Predicted Farm Supply  +  Predicted Buyer Demand
 
 | Document | Purpose |
 |---|---|
-| [LICENSE](LICENSE) | MIT License |
+| [LICENSE](LICENSE) | Tyllage Proprietary License (all rights reserved) |
 | [SECURITY.md](SECURITY.md) | How to report a vulnerability privately |
 | [AUDIT.md](AUDIT.md) | Security controls, latest audit results and known limitations |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | How to set up, change and submit code |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Outside contributions are not accepted; workflow for Tyllage team members |
 | [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) | Expected behaviour in project spaces |
 
-Released under the [MIT License](LICENSE).
+## License and ownership
+
+© 2026 Tyllage LLP. All rights reserved.
+
+Tyllage, including its code, designs, business rules and documentation, is proprietary to Tyllage LLP and is shared under the [Tyllage Proprietary License](LICENSE). No licence is granted to use, copy, modify, deploy or redistribute it without Tyllage's prior written permission. GitHub's Terms of Service let you view and fork public repositories on GitHub; that does not give any further right to use this code.
+
+Third-party open-source packages used by Tyllage remain under their own licences.
+
+For licensing or partnership enquiries, contact the team through the [Tyllage GitHub organisation](https://github.com/Tyllage).

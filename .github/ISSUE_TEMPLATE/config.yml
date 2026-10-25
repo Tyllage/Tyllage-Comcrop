@@ -1,5 +1,8 @@
 blank_issues_enabled: false
 contact_links:
   - name: Report a security vulnerability
-    url: https://github.com/Tyllage/Tyllage/security/advisories/new
-    about: Please report security issues privately, not as public issues.
+    url: https://github.com/Tyllage/Tyllage-Comcrop/security/advisories/new
+    about: Report security problems privately. Do not open a public issue.
+  - name: Licensing and partnership enquiries
+    url: https://github.com/Tyllage
+    about: Tyllage is proprietary software. Contact the Tyllage team for permission to use it.

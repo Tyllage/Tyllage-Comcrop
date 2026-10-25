@@ -1,21 +1,100 @@
-MIT License
+Tyllage Proprietary License
 
-Copyright (c) 2026 Tyllage
+Copyright (c) 2026 Tyllage LLP (UEN T26LL1129K), Singapore. All rights reserved.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+This repository and everything in it, including source code, object code,
+documentation, designs, database schemas, business rules, data models, images,
+text and other materials (together, the "Software"), is the confidential and
+proprietary property of Tyllage LLP ("Tyllage") and is protected by copyright
+and other intellectual property laws of Singapore and other countries.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+1. NO LICENCE GRANTED
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+   No licence or other right in the Software is granted to anyone, by
+   implication, estoppel or otherwise, except as expressly set out in a
+   separate written agreement signed by an authorised representative of
+   Tyllage.
+
+   The Software being publicly visible (for example, in a public GitHub
+   repository) does NOT make it open source and does NOT grant any permission
+   to use it.
+
+   Partners, members, employees and contractors of Tyllage may use the
+   Software only for the business of Tyllage and only as Tyllage authorises.
+
+2. PROHIBITED ACTIONS
+
+   Without Tyllage's prior written permission, you may not, in whole or in
+   part:
+
+   a. copy, reproduce, download for reuse, or mirror the Software;
+   b. modify, adapt, translate or create derivative works of the Software;
+   c. distribute, publish, sublicense, sell, rent, lease or lend the Software;
+   d. deploy, host, run or make the Software available to any third party,
+      including as a hosted or software-as-a-service offering;
+   e. use the Software, or any part of its design, logic or business rules,
+      to build a competing product or service;
+   f. reverse engineer, decompile or disassemble any part of the Software,
+      except to the extent that applicable law expressly permits this despite
+      this restriction;
+   g. remove or alter any copyright, trademark or proprietary notice in the
+      Software;
+   h. use the Software, or any part of it, to train, fine-tune or evaluate
+      machine-learning or artificial-intelligence models.
+
+3. GITHUB PLATFORM
+
+   Where the Software is hosted in a public GitHub repository, GitHub's Terms
+   of Service allow other GitHub users to view the repository and to create a
+   fork of it within GitHub. That is the ONLY permission given, and it exists
+   solely because GitHub's Terms of Service require it. A fork does not give
+   any right to use, run, modify, deploy or distribute the Software outside of
+   viewing it on GitHub, and every restriction in this license continues to
+   apply to any fork or copy.
+
+4. CONTRIBUTIONS
+
+   Tyllage does not accept contributions from anyone outside the Tyllage team.
+   Unsolicited pull requests, patches or suggestions may be closed without
+   review. If any material is nevertheless submitted to Tyllage, the submitter
+   assigns to Tyllage all rights, title and interest in it, and Tyllage may use
+   it without any obligation to the submitter.
+
+5. TRADEMARKS
+
+   "Tyllage", the Tyllage logo and the names of Tyllage products and modules
+   are trademarks or trade names of Tyllage. No right is granted to use them,
+   any confusingly similar mark, or the names, likenesses or story of
+   Tyllage's founders, for any purpose.
+
+6. THIRD-PARTY COMPONENTS
+
+   The Software depends on third-party open-source packages that are licensed
+   separately by their own authors under their own terms. Those terms apply
+   only to those packages and do not apply to Tyllage's own code.
+
+7. ENFORCEMENT
+
+   Any use of the Software that is not expressly authorised in writing by
+   Tyllage is an infringement of Tyllage's rights. Tyllage reserves the right
+   to take any action available to it under law, including seeking injunctive
+   relief, damages and legal costs, and requesting the removal of infringing
+   copies from any platform.
+
+8. NO WARRANTY
+
+   Where the Software is provided under a separate written agreement, it is
+   provided "as is", without warranty of any kind, express or implied, unless
+   that agreement says otherwise. To the maximum extent permitted by law,
+   Tyllage is not liable for any claim, damages or other liability arising
+   from the Software or its use.
+
+9. GOVERNING LAW
+
+   This license is governed by the laws of the Republic of Singapore, and the
+   courts of Singapore have exclusive jurisdiction over any dispute arising
+   from it.
+
+For licensing, partnership or permission requests, contact Tyllage LLP at
+tyllage.co@gmail.com or through the Tyllage GitHub organisation:
+https://github.com/Tyllage

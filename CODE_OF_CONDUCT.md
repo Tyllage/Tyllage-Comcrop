@@ -2,7 +2,7 @@
 
 ## Our pledge
 
-We want Tyllage to be a welcoming project for everyone, including farmers, buyers, students, developers and researchers, regardless of age, body size, disability, ethnicity, gender identity and expression, level of experience, education, nationality, personal appearance, race, religion, or sexual identity and orientation.
+Tyllage is a proprietary project maintained by the Tyllage team; it does not accept outside contributions (see [CONTRIBUTING.md](CONTRIBUTING.md)). We want every project space to be respectful and safe for team members, pilot farms, buyers and anyone who contacts us, regardless of age, body size, disability, ethnicity, gender identity and expression, level of experience, education, nationality, personal appearance, race, religion, or sexual identity and orientation.
 
 ## Our standards
 
@@ -22,13 +22,13 @@ Examples of unacceptable behaviour:
 
 ## Scope
 
-This Code of Conduct applies in all project spaces: issues, pull requests, discussions and reviews. It also applies when someone represents the project elsewhere.
+This Code of Conduct applies to Tyllage team members in all project spaces: issues, pull requests, discussions and reviews. It also applies to anyone who interacts with those spaces, and when someone represents Tyllage elsewhere.
 
 ## Enforcement
 
 Report unacceptable behaviour to the maintainers of the **Tyllage** GitHub organisation. Use a private channel, such as a direct message to a maintainer or GitHub's **Report content** option. Reports are handled in confidence.
 
-Maintainers may remove, edit or reject comments, commits, code and issues that break this Code of Conduct. They may also temporarily or permanently ban a contributor whose behaviour is inappropriate, threatening or harmful.
+Maintainers may remove, edit or reject comments, commits, code and issues that break this Code of Conduct. They may also temporarily or permanently ban anyone whose behaviour is inappropriate, threatening or harmful.
 
 ## Attribution
 

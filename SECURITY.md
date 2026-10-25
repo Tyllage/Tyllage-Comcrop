@@ -9,7 +9,8 @@ Tyllage is in its pilot (MVP) phase. Only the latest commit on `main`, and the d
 | Version | Supported |
 |---|---|
 | `main` (latest) | ✅ |
-| Older commits and forks | ❌ |
+| Older commits | ❌ |
+| Forks and copies of this repository | ❌ Not authorised. See [LICENSE](LICENSE). |
 
 ## Reporting a vulnerability
 
@@ -52,6 +53,10 @@ Out of scope:
 - third-party services (Railway, OpenAI, WhatsApp Cloud API). Report those to the provider;
 - Shop payments, which are simulated in the pilot. No real money or card details are handled.
 
+## Unauthorised copies and forks
+
+This repository is proprietary. Tyllage does not support, and has not authorised, any deployment, fork or copy of this code outside the Tyllage team. Vulnerabilities found only in someone else's copy are out of scope. If you find Tyllage code being used or hosted without permission, please tell us through the same private reporting channel.
+
 ## Safe harbour
 
 We will not take action against good-faith research that:
@@ -60,6 +65,8 @@ We will not take action against good-faith research that:
 - does not access, change or delete data that is not yours;
 - does not degrade the service for others;
 - gives us reasonable time to fix the issue before you disclose it.
+
+Safe harbour covers security testing only. It does not grant any licence to copy, use, modify or redistribute Tyllage code.
 
 ## How Tyllage protects data
 

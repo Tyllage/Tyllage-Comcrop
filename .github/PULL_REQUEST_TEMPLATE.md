@@ -1,3 +1,5 @@
+<!-- Tyllage team members only. Pull requests from outside the Tyllage team are closed without review. See CONTRIBUTING.md and LICENSE. -->
+
 ## What does this change?
 
 ## Why?

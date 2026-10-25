@@ -5,6 +5,8 @@ title: "[Feature] "
 labels: enhancement
 ---
 
+<!-- Issues are for the Tyllage team. Tyllage is proprietary and does not accept outside contributions; see CONTRIBUTING.md. -->
+
 **Who is this for?**
 Farm admin, farm staff, business buyer, consumer or platform admin.
 

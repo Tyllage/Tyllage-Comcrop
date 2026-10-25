@@ -5,6 +5,7 @@ title: "[Bug] "
 labels: bug
 ---
 
+<!-- Issues are for the Tyllage team. Tyllage is proprietary and does not accept outside contributions; see CONTRIBUTING.md. -->
 <!-- Security issue? Do NOT file it here. See SECURITY.md and use "Report a vulnerability" in the Security tab. -->
 
 **What happened**
