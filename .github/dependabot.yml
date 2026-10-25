@@ -1,4 +1,4 @@
-# Weekly dependency update checks for the API and the web app.
+# Weekly dependency update checks for the API, the web app and CI actions.
 version: 2
 updates:
   - package-ecosystem: npm
@@ -8,6 +8,20 @@ updates:
     open-pull-requests-limit: 5
   - package-ecosystem: npm
     directory: /client
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    # react and react-dom must stay on the same version, or the app crashes
+    # on load with React error #527. Update them together in one PR.
+    groups:
+      react:
+        patterns:
+          - react
+          - react-dom
+  # Actions are pinned to commit SHAs (required by the Tyllage Actions policy).
+  # Dependabot keeps the SHA and the version comment up to date.
+  - package-ecosystem: github-actions
+    directory: /
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
